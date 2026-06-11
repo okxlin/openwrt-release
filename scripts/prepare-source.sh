@@ -30,6 +30,7 @@ if [[ -f "$ROOT_DIR/feeds/custom-feeds.conf" ]]; then
     cp "$SOURCE_DIR/feeds.conf.default" "$SOURCE_DIR/feeds.conf.default.template"
   fi
 
+  {
     cat "$SOURCE_DIR/feeds.conf.default.template"
     printf '\n'
     sed '/^#$/d' "$ROOT_DIR/feeds/custom-feeds.conf"
