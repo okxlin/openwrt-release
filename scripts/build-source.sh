@@ -28,7 +28,7 @@ if grep -qE 'CONFIG_PACKAGE_daed=y|CONFIG_PACKAGE_mosdns=y' "$SOURCE_DIR/.config
   if [[ -f "$GOLANG_MAKEFILE" ]]; then
     log 'Patching golang to 1.26 (needed by daed/mosdns)'
     sed -i 's/GO_VERSION_MAJOR_MINOR:=.*/GO_VERSION_MAJOR_MINOR:=1.26/' "$GOLANG_MAKEFILE"
-    sed -i 's/GO_VERSION_PATCH:=.*/GO_VERSION_PATCH:=.4/' "$GOLANG_MAKEFILE"
+    sed -i 's/GO_VERSION_PATCH:=.*/GO_VERSION_PATCH:=4/' "$GOLANG_MAKEFILE"
     sed -i 's|GOROOT_BOOTSTRAP=".*"|GOROOT_BOOTSTRAP="/usr/local/go"|' "$GOLANG_MAKEFILE"
     log 'golang patched to 1.26 - using /usr/local/go as bootstrap'
   else
