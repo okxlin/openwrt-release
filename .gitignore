@@ -27,3 +27,4 @@ __pycache__/
 # Local tooling state
 .sisyphus/
 .omo/
+/files/etc/openclash/core/

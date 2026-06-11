@@ -1,0 +1,4 @@
+luci-app-frpc
+luci-app-frps
+luci-app-ttyd
+luci-app-tailscale-community

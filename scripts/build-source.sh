@@ -36,6 +36,24 @@ if grep -qE 'CONFIG_PACKAGE_daed=y|CONFIG_PACKAGE_mosdns=y' "$SOURCE_DIR/.config
     warn "golang Makefile not found at $GOLANG_MAKEFILE; daed/mosdns build may fail"
   fi
 fi
+
+# If openclash is selected, pre-download Meta core (mihomo) for offline use
+if grep -q 'CONFIG_PACKAGE_luci-app-openclash=y' "$SOURCE_DIR/.config" 2>/dev/null; then
+  CORE_DIR="$SOURCE_DIR/files/etc/openclash/core"
+  CORE_FILE="$CORE_DIR/clash_meta"
+  if [[ ! -f "$CORE_FILE" ]]; then
+    log 'Downloading OpenClash Meta core (mihomo v1.19.27)'
+    mkdir -p "$CORE_DIR"
+    curl -sL -o /tmp/clash_meta.gz \
+      'https://github.com/MetaCubeX/mihomo/releases/download/v1.19.27/mihomo-linux-amd64-v1-v1.19.27.gz'
+    gunzip -c /tmp/clash_meta.gz > "$CORE_FILE"
+    chmod +x "$CORE_FILE"
+    log "OpenClash core installed: $(du -h "$CORE_FILE" | cut -f1)"
+  else
+    log 'OpenClash Meta core already cached, skipping download'
+  fi
+fi
+
 export FORCE_UNSAFE_CONFIGURE=1
 make defconfig
 make -j"$(nproc)"

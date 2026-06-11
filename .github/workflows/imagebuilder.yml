@@ -35,6 +35,11 @@ on:
         description: Bypass router preset (off or on)
         required: false
         default: off
+      tools:
+        description: Extra tools (none or extras)
+        required: false
+        default: none
+
 
 concurrency:
   group: imagebuilder-${{ github.ref }}
@@ -54,6 +59,7 @@ jobs:
       COMPONENT_STORAGE: ${{ inputs.storage || 'common' }}
       COMPONENT_NETWORK: ${{ inputs.network || 'enhanced' }}
       COMPONENT_BYPASS: ${{ inputs.bypass || 'off' }}
+      COMPONENT_EXTRAS: ${{ inputs.tools || 'none' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -83,6 +89,7 @@ jobs:
           export OVERRIDE_COMPONENT_STORAGE="$COMPONENT_STORAGE"
           export OVERRIDE_COMPONENT_NETWORK="$COMPONENT_NETWORK"
           export OVERRIDE_COMPONENT_BYPASS="$COMPONENT_BYPASS"
+          export OVERRIDE_COMPONENT_EXTRAS="$COMPONENT_EXTRAS"
           bash scripts/build-imagebuilder.sh "$PROFILE_ENV"
 
       - name: Upload build artifacts

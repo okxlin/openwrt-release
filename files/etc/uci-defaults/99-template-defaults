@@ -1,6 +1,14 @@
 #!/bin/sh
 
 uci -q set system.@system[0].hostname='openwrt-template'
+uci -q set system.@system[0].zonename='Asia/Shanghai'
+uci -q set system.@system[0].timezone='CST-8'
+uci -q add_list system.ntp.server='ntp.aliyun.com'
+uci -q add_list system.ntp.server='ntp.tencent.com'
 uci -q commit system
+
+uci -q set luci.main.lang='zh-cn'
+uci -q set luci.main.mediaurlbase='/luci-static/argon'
+uci -q commit luci
 
 exit 0

@@ -53,3 +53,8 @@ adguardhome
 mosdns
 luci-app-mosdns
 luci-i18n-mosdns-zh-cn
+luci-app-frpc
+luci-app-frps
+luci-app-ttyd
+luci-app-tailscale-community
+

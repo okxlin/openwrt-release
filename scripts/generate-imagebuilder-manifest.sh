@@ -56,6 +56,10 @@ fi
 if [[ -n "${OVERRIDE_COMPONENT_IMAGE:-}" ]]; then
   COMPONENT_IMAGE="$OVERRIDE_COMPONENT_IMAGE"
 fi
+if [[ -n "${OVERRIDE_COMPONENT_EXTRAS:-}" ]]; then
+  COMPONENT_EXTRAS="$OVERRIDE_COMPONENT_EXTRAS"
+fi
+
 
 : "${COMPONENT_THEMES:=stock}"
 : "${COMPONENT_PROXY:=none}"
@@ -64,6 +68,7 @@ fi
 : "${COMPONENT_BYPASS:=off}"
 : "${COMPONENT_DNS:=none}"
 : "${COMPONENT_IMAGE:=default}"
+: "${COMPONENT_EXTRAS:=none}"
 
 temp_manifest="$(mktemp)"
 trap 'rm -f "$temp_manifest"' EXIT
@@ -84,6 +89,8 @@ append_category "theme-$COMPONENT_THEMES"
 append_category "network-$COMPONENT_NETWORK"
 append_category "storage-$COMPONENT_STORAGE"
 append_category "dns-$COMPONENT_DNS"
+append_category "tools-extras"
+
 
 if [[ "$COMPONENT_PROXY" != "none" ]]; then
   append_category "proxy-$COMPONENT_PROXY"
@@ -104,5 +111,6 @@ write_key_value_file "$OUTPUT_COMPONENTS" \
   "component_bypass=$COMPONENT_BYPASS" \
   "component_dns=$COMPONENT_DNS" \
   "component_image=$COMPONENT_IMAGE"
+  "component_extras=$COMPONENT_EXTRAS" \
 
 printf '%s\n' "$OUTPUT_MANIFEST"

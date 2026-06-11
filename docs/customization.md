@@ -58,6 +58,7 @@ You can reference them through `PRESET_FILE` in a profile env file.
 - `COMPONENT_STORAGE=common|docker`
 - `COMPONENT_NETWORK=enhanced`
 - `COMPONENT_DNS=none|adguard|mosdns`
+- `COMPONENT_EXTRAS=none|extras`
 - `PRESET_FILE=configs/imagebuilder/presets/*.env`
 
 生成逻辑由 `scripts/generate-imagebuilder-manifest.sh` 负责。  
@@ -85,6 +86,8 @@ Each toggle value determines which `categories/<name>.txt` is loaded:
 | `COMPONENT_NETWORK` | `enhanced` | `network-enhanced.txt` |
 | `COMPONENT_BYPASS` | `off` | 跳过 / skipped |
 | | `on` | `network-bypass.txt` |
+| `COMPONENT_EXTRAS` | `none` | 跳过 / skipped |
+| | `extras` | `tools-extras.txt` |
 
 拼装顺序（`generate-imagebuilder-manifest.sh`）：
 Assembly order (`generate-imagebuilder-manifest.sh`):
@@ -95,8 +98,9 @@ Assembly order (`generate-imagebuilder-manifest.sh`):
 4. 网络 category（如 `network-enhanced.txt`）
 5. 存储 category（如 `storage-common.txt`）
 6. DNS category（如 `dns-adguard.txt`），仅在值非 `none` 时
-7. 代理 category（如 `proxy-dae.txt`），仅在值非 `none` 时
-8. 旁路由 category（`network-bypass.txt`），仅在值 = `on` 时
+7. 工具 extras category（如 `tools-extras.txt`），仅在值非 `none` 时
+8. 代理 category（如 `proxy-dae.txt`），仅在值非 `none` 时
+9. 旁路由 category（`network-bypass.txt`），仅在值 = `on` 时
 
 最终合并后的包单去重排序，写入 `generated-packages.txt`。
 The merged package list is deduplicated, sorted, and written to `generated-packages.txt`.
