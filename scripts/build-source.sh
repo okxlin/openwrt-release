@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/common.sh
+source "$SCRIPT_DIR/common.sh"
+
+CONFIG_FILE="${1:-}"
+[[ -n "$CONFIG_FILE" ]] || die "Usage: bash scripts/build-source.sh <config-file>"
+
+bash "$SCRIPT_DIR/prepare-source.sh" "$CONFIG_FILE"
+
+SOURCE_DIR="$ROOT_DIR/workdir/source/openwrt"
+OUTPUT_DIR="$ROOT_DIR/dist/source"
+
+ensure_dir "$OUTPUT_DIR"
+require_dir "$SOURCE_DIR"
+
+pushd "$SOURCE_DIR" >/dev/null
+./scripts/feeds update -a
+./scripts/feeds install -a
+
+# If daed is selected, patch golang to Go 1.26 for compatibility
+# daed requires Go >= 1.26.0; OpenWrt 24.10 ships Go 1.23 by default
+if grep -q 'CONFIG_PACKAGE_daed=y' "$SOURCE_DIR/.config" 2>/dev/null; then
+  GOLANG_MAKEFILE="$SOURCE_DIR/feeds/packages/lang/golang/golang/Makefile"
+  if [[ -f "$GOLANG_MAKEFILE" ]]; then
+    log 'Patching golang to 1.26 for daed build'
+    sed -i 's/GO_VERSION_MAJOR_MINOR:=.*/GO_VERSION_MAJOR_MINOR:=1.26/' "$GOLANG_MAKEFILE"
+    sed -i 's/GO_VERSION_PATCH:=.*/GO_VERSION_PATCH:=.4/' "$GOLANG_MAKEFILE"
+    sed -i 's|GOROOT_BOOTSTRAP=".*"|GOROOT_BOOTSTRAP="/usr/local/go"|' "$GOLANG_MAKEFILE"
+    log 'golang patched to 1.26 - using /usr/local/go as bootstrap'
+  else
+    warn "golang Makefile not found at $GOLANG_MAKEFILE; daed build may fail"
+  fi
+fi
+make defconfig
+make -j"$(nproc)"
+popd >/dev/null
+
+bash "$SCRIPT_DIR/package-artifacts.sh" "$SOURCE_DIR/bin/targets" "$OUTPUT_DIR"
+
+log "Full source build completed."

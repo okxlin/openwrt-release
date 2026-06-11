@@ -1,0 +1,5 @@
+bash
+coreutils-timeout
+iperf3
+pciutils
+usbutils

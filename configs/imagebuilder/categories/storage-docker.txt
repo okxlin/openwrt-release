@@ -1,0 +1,9 @@
+block-mount
+docker
+dockerd
+e2fsprogs
+kmod-fs-ext4
+kmod-usb-storage
+kmod-usb-storage-uas
+luci-app-dockerman
+parted

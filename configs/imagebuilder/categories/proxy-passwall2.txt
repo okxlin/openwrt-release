@@ -1,0 +1,9 @@
+ca-bundle
+curl
+dnsmasq-full
+ip-full
+luci-app-passwall2
+naiveproxy
+shadowsocks-rust-sslocal
+sing-box
+xray-core

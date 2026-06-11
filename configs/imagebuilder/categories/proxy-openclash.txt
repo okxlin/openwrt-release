@@ -1,0 +1,9 @@
+bash
+ca-bundle
+curl
+dnsmasq-full
+ip-full
+luci-app-openclash
+ruby
+ruby-yaml
+unzip

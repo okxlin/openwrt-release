@@ -1,0 +1,7 @@
+luci
+luci-ssl
+curl
+wget-ssl
+nano
+htop
+ip-full

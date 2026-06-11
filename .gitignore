@@ -1,0 +1,29 @@
+.DS_Store
+Thumbs.db
+
+# Build outputs
+dist/
+output/
+artifacts/
+tmp/
+
+# OpenWrt working trees
+/workdir/
+/openwrt/
+/dl/
+/build_dir/
+/staging_dir/
+/bin/
+
+# Python
+.venv/
+venv/
+__pycache__/
+
+# Local environment
+.env
+.env.local
+
+# Local tooling state
+.sisyphus/
+.omo/

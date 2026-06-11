@@ -1,0 +1,61 @@
+name: Full Source OpenWrt
+
+on:
+  workflow_dispatch:
+    inputs:
+      config:
+        description: Source build config file
+        required: false
+        default: configs/source/example-x86_64.config
+
+concurrency:
+  group: source-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      SOURCE_CONFIG: ${{ inputs.config || 'configs/source/example-x86_64.config' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install CI Python dependencies
+        run: python -m pip install -r requirements-ci.txt
+
+      - name: Install build prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ack antlr3 asciidoc autoconf automake autopoint binutils bison build-essential \
+            bzip2 ccache cmake cpio curl device-tree-compiler flex gawk gcc-multilib g++-multilib gettext \
+            genisoimage git gperf haveged help2man intltool libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev \
+            libgmp3-dev libltdl-dev libmpc-dev libmpfr-dev libncurses-dev libpython3-dev libreadline-dev \
+            libssl-dev libtool lrzsz mkisofs msmtp ninja-build p7zip p7zip-full patch pkgconf python3 python3-pip \
+            python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip \
+            vim wget xmlto xxd zlib1g-dev zstd
+
+      - name: Install Go 1.26 (system bootstrap for daed)
+        run: |
+          curl -sL https://go.dev/dl/go1.26.4.linux-amd64.tar.gz -o /tmp/go.tar.gz
+          sudo tar -C /usr/local -xzf /tmp/go.tar.gz
+          echo "/usr/local/go/bin" >> "$GITHUB_PATH"
+
+      - name: Validate repository structure
+        run: bash scripts/check-env.sh --mode all
+
+      - name: Build OpenWrt from source
+        run: bash scripts/build-source.sh "$SOURCE_CONFIG"
+
+      - name: Upload source build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: openwrt-source-artifacts
+          path: dist/source/

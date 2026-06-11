@@ -1,0 +1,86 @@
+name: ImageBuilder OpenWrt
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: ImageBuilder profile env file
+        required: false
+        default: configs/imagebuilder/example-x86_64.env
+      preset:
+        description: Optional component preset file
+        required: false
+        default: configs/imagebuilder/presets/generic-router.env
+      themes:
+        description: Theme set (stock or argon)
+        required: false
+        default: stock
+      proxy:
+        description: Proxy suite (none, dae, homeproxy, openclash, passwall2)
+        required: false
+        default: none
+      storage:
+        description: Storage bundle (common or docker)
+        required: false
+        default: common
+      network:
+        description: Network bundle (enhanced)
+        required: false
+        default: enhanced
+      bypass:
+        description: Bypass router preset (off or on)
+        required: false
+        default: off
+
+concurrency:
+  group: imagebuilder-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      PROFILE_ENV: ${{ inputs.profile || 'configs/imagebuilder/example-x86_64.env' }}
+      PRESET_ENV: ${{ inputs.preset || 'configs/imagebuilder/presets/generic-router.env' }}
+      COMPONENT_THEMES: ${{ inputs.themes || 'stock' }}
+      COMPONENT_PROXY: ${{ inputs.proxy || 'none' }}
+      COMPONENT_STORAGE: ${{ inputs.storage || 'common' }}
+      COMPONENT_NETWORK: ${{ inputs.network || 'enhanced' }}
+      COMPONENT_BYPASS: ${{ inputs.bypass || 'off' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install CI Python dependencies
+        run: python -m pip install -r requirements-ci.txt
+
+      - name: Install build prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential curl git jq rsync xz-utils zstd
+
+      - name: Validate repository structure
+        run: bash scripts/check-env.sh --mode all
+
+      - name: Build image via ImageBuilder
+        run: |
+          export OVERRIDE_PRESET_FILE="$PRESET_ENV"
+          export OVERRIDE_COMPONENT_THEMES="$COMPONENT_THEMES"
+          export OVERRIDE_COMPONENT_PROXY="$COMPONENT_PROXY"
+          export OVERRIDE_COMPONENT_STORAGE="$COMPONENT_STORAGE"
+          export OVERRIDE_COMPONENT_NETWORK="$COMPONENT_NETWORK"
+          export OVERRIDE_COMPONENT_BYPASS="$COMPONENT_BYPASS"
+          bash scripts/build-imagebuilder.sh "$PROFILE_ENV"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: openwrt-imagebuilder-artifacts
+          path: dist/imagebuilder/

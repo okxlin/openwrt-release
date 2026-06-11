@@ -1,0 +1,6 @@
+block-mount
+e2fsprogs
+kmod-fs-ext4
+kmod-usb-storage
+kmod-usb-storage-uas
+parted
