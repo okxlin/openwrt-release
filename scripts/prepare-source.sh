@@ -31,9 +31,9 @@ if [[ -f "$ROOT_DIR/feeds/custom-feeds.conf" ]]; then
   fi
 
   {
-    cat "$SOURCE_DIR/feeds.conf.default.template"
-    printf '\n'
     sed '/^#$/d' "$ROOT_DIR/feeds/custom-feeds.conf"
+    printf '\n'
+    cat "$SOURCE_DIR/feeds.conf.default.template"
   } > "$SOURCE_DIR/feeds.conf.default"
 fi
 
