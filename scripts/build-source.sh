@@ -21,18 +21,18 @@ pushd "$SOURCE_DIR" >/dev/null
 ./scripts/feeds update -a
 ./scripts/feeds install -a
 
-# If daed is selected, patch golang to Go 1.26 for compatibility
-# daed requires Go >= 1.26.0; OpenWrt 24.10 ships Go 1.23 by default
-if grep -q 'CONFIG_PACKAGE_daed=y' "$SOURCE_DIR/.config" 2>/dev/null; then
+# If daed or mosdns is selected, patch golang to Go 1.26 for compatibility
+# daed requires Go >= 1.26.0; mosdns v2dat requires Go >= 1.25.0
+if grep -qE 'CONFIG_PACKAGE_daed=y|CONFIG_PACKAGE_mosdns=y' "$SOURCE_DIR/.config" 2>/dev/null; then
   GOLANG_MAKEFILE="$SOURCE_DIR/feeds/packages/lang/golang/golang/Makefile"
   if [[ -f "$GOLANG_MAKEFILE" ]]; then
-    log 'Patching golang to 1.26 for daed build'
+    log 'Patching golang to 1.26 (needed by daed/mosdns)'
     sed -i 's/GO_VERSION_MAJOR_MINOR:=.*/GO_VERSION_MAJOR_MINOR:=1.26/' "$GOLANG_MAKEFILE"
     sed -i 's/GO_VERSION_PATCH:=.*/GO_VERSION_PATCH:=.4/' "$GOLANG_MAKEFILE"
     sed -i 's|GOROOT_BOOTSTRAP=".*"|GOROOT_BOOTSTRAP="/usr/local/go"|' "$GOLANG_MAKEFILE"
     log 'golang patched to 1.26 - using /usr/local/go as bootstrap'
   else
-    warn "golang Makefile not found at $GOLANG_MAKEFILE; daed build may fail"
+    warn "golang Makefile not found at $GOLANG_MAKEFILE; daed/mosdns build may fail"
   fi
 fi
 export FORCE_UNSAFE_CONFIGURE=1

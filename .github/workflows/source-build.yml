@@ -42,7 +42,7 @@ jobs:
             python3-setuptools qemu-utils rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip \
             vim wget xmlto xxd zlib1g-dev zstd
 
-      - name: Install Go 1.26 (system bootstrap for daed)
+      - name: Install Go 1.26 (bootstrap for daed/mosdns builds)
         run: |
           curl -sL https://go.dev/dl/go1.26.4.linux-amd64.tar.gz -o /tmp/go.tar.gz
           sudo tar -C /usr/local -xzf /tmp/go.tar.gz
