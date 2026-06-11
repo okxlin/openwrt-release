@@ -35,6 +35,7 @@ if grep -q 'CONFIG_PACKAGE_daed=y' "$SOURCE_DIR/.config" 2>/dev/null; then
     warn "golang Makefile not found at $GOLANG_MAKEFILE; daed build may fail"
   fi
 fi
+export FORCE_UNSAFE_CONFIGURE=1
 make defconfig
 make -j"$(nproc)"
 popd >/dev/null

@@ -49,3 +49,7 @@ naiveproxy
 shadowsocks-rust-sslocal
 sing-box
 xray-core
+adguardhome
+mosdns
+luci-app-mosdns
+luci-i18n-mosdns-zh-cn

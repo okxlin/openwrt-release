@@ -49,6 +49,10 @@ if [[ -n "${OVERRIDE_COMPONENT_BYPASS:-}" ]]; then
   COMPONENT_BYPASS="$OVERRIDE_COMPONENT_BYPASS"
 fi
 
+if [[ -n "${OVERRIDE_COMPONENT_DNS:-}" ]]; then
+  COMPONENT_DNS="$OVERRIDE_COMPONENT_DNS"
+fi
+
 if [[ -n "${OVERRIDE_COMPONENT_IMAGE:-}" ]]; then
   COMPONENT_IMAGE="$OVERRIDE_COMPONENT_IMAGE"
 fi
@@ -58,6 +62,7 @@ fi
 : "${COMPONENT_STORAGE:=common}"
 : "${COMPONENT_NETWORK:=enhanced}"
 : "${COMPONENT_BYPASS:=off}"
+: "${COMPONENT_DNS:=none}"
 : "${COMPONENT_IMAGE:=default}"
 
 temp_manifest="$(mktemp)"
@@ -78,6 +83,7 @@ append_category "tools-common"
 append_category "theme-$COMPONENT_THEMES"
 append_category "network-$COMPONENT_NETWORK"
 append_category "storage-$COMPONENT_STORAGE"
+append_category "dns-$COMPONENT_DNS"
 
 if [[ "$COMPONENT_PROXY" != "none" ]]; then
   append_category "proxy-$COMPONENT_PROXY"
@@ -96,6 +102,7 @@ write_key_value_file "$OUTPUT_COMPONENTS" \
   "component_storage=$COMPONENT_STORAGE" \
   "component_network=$COMPONENT_NETWORK" \
   "component_bypass=$COMPONENT_BYPASS" \
+  "component_dns=$COMPONENT_DNS" \
   "component_image=$COMPONENT_IMAGE"
 
 printf '%s\n' "$OUTPUT_MANIFEST"

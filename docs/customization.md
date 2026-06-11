@@ -10,6 +10,7 @@ The current 80/20 categories include:
 
 - 主题 / Themes
 - 代理套件 / Proxy suites
+- DNS 套件 / DNS suites
 - Docker / 存储 / Docker and storage
 - 常用系统工具 / Common system tools
 - 网络增强 / Network enhancements
@@ -30,6 +31,7 @@ For example:
 - `theme-stock.txt`、`theme-argon.txt`：主题选择 / Theme selection
 - `network-enhanced.txt`：常用网络增强 / Common network enhancements
 - `storage-docker.txt`：Docker 与磁盘相关组件 / Docker and storage components
+- `dns-adguard.txt`、`dns-mosdns.txt`：DNS 套件 / DNS suites
 - `proxy-homeproxy.txt`、`proxy-openclash.txt`、`proxy-passwall2.txt`：代理套件 / Proxy suites
 
 ## 预设文件 / Preset Files
@@ -55,7 +57,7 @@ You can reference them through `PRESET_FILE` in a profile env file.
 - `COMPONENT_PROXY=none|dae|homeproxy|openclash|passwall2`
 - `COMPONENT_STORAGE=common|docker`
 - `COMPONENT_NETWORK=enhanced`
-- `COMPONENT_BYPASS=off|on`
+- `COMPONENT_DNS=none|adguard|mosdns`
 - `PRESET_FILE=configs/imagebuilder/presets/*.env`
 
 生成逻辑由 `scripts/generate-imagebuilder-manifest.sh` 负责。  
@@ -74,7 +76,10 @@ Each toggle value determines which `categories/<name>.txt` is loaded:
 | | `dae` | `proxy-dae.txt` |
 | | `homeproxy` | `proxy-homeproxy.txt` |
 | | `openclash` | `proxy-openclash.txt` |
-| | `passwall2` | `proxy-passwall2.txt` |
+|| `passwall2` | `proxy-passwall2.txt` |
+|| `COMPONENT_DNS` | `none` | 跳过 / skipped |
+|| | `adguard` | `dns-adguard.txt` |
+|| | `mosdns` | `dns-mosdns.txt` |
 | `COMPONENT_STORAGE` | `common` | `storage-common.txt` |
 | | `docker` | `storage-docker.txt` |
 | `COMPONENT_NETWORK` | `enhanced` | `network-enhanced.txt` |
@@ -89,8 +94,9 @@ Assembly order (`generate-imagebuilder-manifest.sh`):
 3. 主题 category（如 `theme-stock.txt`）
 4. 网络 category（如 `network-enhanced.txt`）
 5. 存储 category（如 `storage-common.txt`）
-6. 代理 category（如 `proxy-dae.txt`），仅在值非 `none` 时
-7. 旁路由 category（`network-bypass.txt`），仅在值 = `on` 时
+6. DNS category（如 `dns-adguard.txt`），仅在值非 `none` 时
+7. 代理 category（如 `proxy-dae.txt`），仅在值非 `none` 时
+8. 旁路由 category（`network-bypass.txt`），仅在值 = `on` 时
 
 最终合并后的包单去重排序，写入 `generated-packages.txt`。
 The merged package list is deduplicated, sorted, and written to `generated-packages.txt`.
@@ -104,8 +110,8 @@ If you only want to add a simple package, you can still edit `configs/imagebuild
 编辑 `feeds/custom-feeds.conf`，推荐固定到 commit，避免构建漂移。  
 Edit `feeds/custom-feeds.conf`. Pin feeds to commits whenever possible to avoid build drift.
 
-代理套件和社区主题通常最依赖第三方 feed。  
-Proxy suites and community themes are usually the most dependent on third-party feeds.
+代理套件、DNS 套件和社区主题通常最依赖第三方 feed。MosDNS 仅需 `sbwml/luci-app-mosdns` feed（v5 分支），v2ray-geodata 由官方 packages feed 提供。
+Proxy suites, DNS suites, and community themes usually require third-party feeds. MosDNS only needs the `sbwml/luci-app-mosdns` feed (v5 branch); v2ray-geodata is provided by the official packages feed.
 
 ## 添加覆盖文件 / Add Overlay Files
 
@@ -130,7 +136,8 @@ Copy an existing `configs/imagebuilder/*.env` file and update:
 - `OPENWRT_PROFILE`
 - `IMAGEBUILDER_NAME`
 - `PRESET_FILE`
-- `COMPONENT_*` 开关 / `COMPONENT_*` toggles
+  - COMPONENT_DNS / 组件开关 / 组件开关
+
 
 ## GitHub Actions 输入 / GitHub Actions Inputs
 
@@ -141,6 +148,7 @@ Copy an existing `configs/imagebuilder/*.env` file and update:
 - `preset`
 - `themes`
 - `proxy`
+- `dns`
 - `storage`
 - `network`
 - `bypass`

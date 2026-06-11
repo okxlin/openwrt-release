@@ -1,0 +1,3 @@
+mosdns
+luci-app-mosdns
+luci-i18n-mosdns-zh-cn

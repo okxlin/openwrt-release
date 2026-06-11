@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       config:
-        description: Source build config file
+        description: Source build config file (e.g. example-x86_64, dae-x86_64, dns-x86_64)
         required: false
         default: configs/source/example-x86_64.config
 

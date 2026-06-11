@@ -19,6 +19,10 @@ on:
         description: Proxy suite (none, dae, homeproxy, openclash, passwall2)
         required: false
         default: none
+      dns:
+        description: DNS suite (none, adguard, mosdns)
+        required: false
+        default: none
       storage:
         description: Storage bundle (common or docker)
         required: false
@@ -46,6 +50,7 @@ jobs:
       PRESET_ENV: ${{ inputs.preset || 'configs/imagebuilder/presets/generic-router.env' }}
       COMPONENT_THEMES: ${{ inputs.themes || 'stock' }}
       COMPONENT_PROXY: ${{ inputs.proxy || 'none' }}
+      COMPONENT_DNS: ${{ inputs.dns || 'none' }}
       COMPONENT_STORAGE: ${{ inputs.storage || 'common' }}
       COMPONENT_NETWORK: ${{ inputs.network || 'enhanced' }}
       COMPONENT_BYPASS: ${{ inputs.bypass || 'off' }}
@@ -74,6 +79,7 @@ jobs:
           export OVERRIDE_PRESET_FILE="$PRESET_ENV"
           export OVERRIDE_COMPONENT_THEMES="$COMPONENT_THEMES"
           export OVERRIDE_COMPONENT_PROXY="$COMPONENT_PROXY"
+          export OVERRIDE_COMPONENT_DNS="$COMPONENT_DNS"
           export OVERRIDE_COMPONENT_STORAGE="$COMPONENT_STORAGE"
           export OVERRIDE_COMPONENT_NETWORK="$COMPONENT_NETWORK"
           export OVERRIDE_COMPONENT_BYPASS="$COMPONENT_BYPASS"
