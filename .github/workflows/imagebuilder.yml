@@ -4,9 +4,19 @@ on:
   workflow_dispatch:
     inputs:
       profile:
-        description: ImageBuilder profile env file
+        description: Target device profile (x86_64, bcm2711, or custom)
         required: false
-        default: configs/imagebuilder/example-x86_64.env
+        default: x86_64
+        type: choice
+        options:
+          - x86_64
+          - bcm2711
+          - custom
+      custom-profile:
+        description: Custom profile env file path (only used when profile is 'custom')
+        required: false
+        default: ''
+        type: string
       preset:
         description: Optional component preset file
         required: false
@@ -51,7 +61,7 @@ jobs:
     permissions:
       contents: read
     env:
-      PROFILE_ENV: ${{ inputs.profile || 'configs/imagebuilder/example-x86_64.env' }}
+      PROFILE_ENV: ${{ inputs.custom-profile || format('configs/imagebuilder/example-{0}.env', inputs.profile) }}
       PRESET_ENV: ${{ inputs.preset || 'configs/imagebuilder/presets/generic-router.env' }}
       COMPONENT_THEMES: ${{ inputs.themes || 'stock' }}
       COMPONENT_PROXY: ${{ inputs.proxy || 'none' }}
