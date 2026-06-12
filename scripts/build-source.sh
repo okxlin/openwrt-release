@@ -74,8 +74,7 @@ if [[ -f "$ROOT_DIR/$CONFIG_FILE" ]]; then
       echo "CONFIG_PACKAGE_$symbol=y" >> .config
     fi
   done
-  # Note: skipping make olddefconfig; recursive deps would strip
-  # community packages again. make world handles config internally.
+  make olddefconfig || true  # resolve recursive deps (e.g. sing-box←homeproxy)
 
   # LuCI i18n packages use auto-generated config symbols not present
   # in .config-package.in; force-add them directly from original config
