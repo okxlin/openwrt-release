@@ -24,8 +24,8 @@ if [[ -n "${BUILD_TAG:-}" ]]; then
   while IFS= read -r -d '' img; do
     dir="$(dirname "$img")"
     base="$(basename "$img")"
-    new_base="${base#openwrt-}"
-    new_base="${ver}-${BUILD_TAG}-${new_base}"
+    # Strip 'openwrt-VERSION-' prefix, replace with version-tag-
+    new_base="${base#openwrt-${ver}-}"
     mv "$img" "${dir}/${new_base}"
     log "  $(basename "$img") -> ${new_base}"
   done < <(find "$DEST_DIR" -name '*.img.gz' -print0)
