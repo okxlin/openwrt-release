@@ -77,7 +77,7 @@ append_category() {
   local category_name="$1"
   local category_file="$CATEGORY_DIR/$category_name.txt"
 
-  [[ "$category_name" == "none" || "$category_name" == "off" || "$category_name" == "default" ]] && return 0
+  [[ "$category_name" == "none" || "$category_name" == "off" || "$category_name" == "default" || "$category_name" =~ -none$ || "$category_name" =~ -off$ || "$category_name" =~ -default$ ]] && return 0
   require_file "$category_file"
   cat "$category_file" >> "$temp_manifest"
   printf '\n' >> "$temp_manifest"
