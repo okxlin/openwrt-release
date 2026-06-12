@@ -154,11 +154,11 @@ The workflows generate:
 
 ## 相关文档 / Related Documents
 
-- `docs/architecture.md`
-- `docs/usage.md`
-- `docs/customization.md`
-- `docs/ci.md`
-- `docs/reproducibility.md`
+- [`docs/architecture.md`](docs/architecture.md) — 架构设计 / Architecture design
+- [`docs/usage.md`](docs/usage.md) — 使用指南 / Usage guide
+- [`docs/customization.md`](docs/customization.md) — 自定义与组件 / Customization & components
+- [`docs/ci.md`](docs/ci.md) — CI 工作流 / CI workflows
+- [`docs/reproducibility.md`](docs/reproducibility.md) — 可复现性 / Reproducibility
 
 ## 注意事项 / Notes
 
