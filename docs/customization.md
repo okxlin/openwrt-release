@@ -11,6 +11,7 @@ The current 80/20 categories include:
 - 主题 / Themes
 - 代理套件 / Proxy suites
 - DNS 套件 / DNS suites
+- 系统工具扩展 / System tools extras（extras：frpc、frps、ttyd 等 / includes frpc, frps, ttyd, etc.）
 - Docker / 存储 / Docker and storage
 - 常用系统工具 / Common system tools
 - 网络增强 / Network enhancements
@@ -18,6 +19,11 @@ The current 80/20 categories include:
 
 这些分类文件位于 `configs/imagebuilder/categories/`。  
 These category files live under `configs/imagebuilder/categories/`.
+这些分类文件位于 `configs/imagebuilder/categories/`。
+These category files live under `configs/imagebuilder/categories/`.
+
+所有包的去重合集请参考 `categories/all.txt`。
+The deduplicated union of all packages is in `categories/all.txt`.
 
 ## 分类包清单 / Category Package Manifests
 
@@ -114,8 +120,8 @@ If you only want to add a simple package, you can still edit `configs/imagebuild
 编辑 `feeds/custom-feeds.conf`，推荐固定到 commit，避免构建漂移。  
 Edit `feeds/custom-feeds.conf`. Pin feeds to commits whenever possible to avoid build drift.
 
-代理套件、DNS 套件和社区主题通常最依赖第三方 feed。MosDNS 仅需 `sbwml/luci-app-mosdns` feed（v5 分支），v2ray-geodata 由官方 packages feed 提供。
-Proxy suites, DNS suites, and community themes usually require third-party feeds. MosDNS only needs the `sbwml/luci-app-mosdns` feed (v5 branch); v2ray-geodata is provided by the official packages feed.
+代理套件、DNS 套件、系统工具扩展和社区主题通常依赖第三方 feed。当前 6 个活跃 feed 从 `feeds/custom-feeds.conf` 控制：passwall-packages、passwall2、openclash、mosdns（v5 分支）、sbwml_pkgs 和 easytier。详细信息请参阅该文件注释。
+Proxy suites, DNS suites, system tool extras, and community themes usually require third-party feeds. Currently 6 active feeds are controlled from `feeds/custom-feeds.conf`: passwall-packages, passwall2, openclash, mosdns (v5 branch), sbwml_pkgs, and easytier. See that file's comments for details.
 
 ## 添加覆盖文件 / Add Overlay Files
 
@@ -140,7 +146,7 @@ Copy an existing `configs/imagebuilder/*.env` file and update:
 - `OPENWRT_PROFILE`
 - `IMAGEBUILDER_NAME`
 - `PRESET_FILE`
-  - COMPONENT_DNS / 组件开关 / 组件开关
+  - 各 COMPONENT 开关 / Component toggles
 
 
 ## GitHub Actions 输入 / GitHub Actions Inputs
@@ -153,6 +159,10 @@ Copy an existing `configs/imagebuilder/*.env` file and update:
 - `themes`
 - `proxy`
 - `dns`
+- `tools`
+
+> OpenClash 构建时，`build-source.sh` 会自动从 GitHub releases 下载 Meta 核心（mihomo），并放入固件根，确保开箱即用。
+> For OpenClash builds, `build-source.sh` auto-downloads the Meta core (mihomo) from GitHub releases and places it in the firmware root for ready use.
 - `storage`
 - `network`
 - `bypass`

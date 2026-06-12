@@ -90,8 +90,11 @@ Full source builds (use when daed or kernel modules are needed):
 # Homeproxy build (sing-box proxy)
 make source-build CONFIG_FILE=configs/source/proxy-x86_64.config
 
-# Daed build (eBPF kernel proxy + homeproxy)
-make source-build CONFIG_FILE=configs/source/dae-x86_64.config
+# DNS build (AdGuard Home + MosDNS)
+make source-build CONFIG_FILE=configs/source/dns-x86_64.config
+
+# All-in-one build (55+ packages, complete)
+make source-build CONFIG_FILE=configs/source/all-x86_64.config
 ```
 
 Non-x86 targets work the same way: just switch the env file.
@@ -110,8 +113,8 @@ If your goal is to reproduce a large number of component combinations, the recom
   Use `configs/imagebuilder/categories/` to manage the 80/20 component bundles
 - 用 `configs/imagebuilder/presets/` 管理常见场景预设  
   Use `configs/imagebuilder/presets/` to manage common scenario presets
-- 用 `packages/` 存放自定义包（如 luci-app-homeproxy、luci-app-daed）
-  Use `packages/` to store custom packages (e.g., luci-app-homeproxy, luci-app-daed)
+- 用 `packages/` 存放自定义包（如 luci-app-homeproxy、luci-app-daed、luci-app-adguardhome、luci-theme-argon）
+  Use `packages/` to store custom packages (e.g., luci-app-homeproxy, luci-app-daed, luci-app-adguardhome, luci-theme-argon)
 - 用 `files/` 提供默认配置和 overlay  
   Use `files/` to provide default configuration and overlay files
 - 用 `feeds/custom-feeds.conf` 管理第三方 feed  
@@ -126,15 +129,15 @@ The template now includes an 80/20 capability matrix covering the following area
 
 - 主题 / Themes（stock、argon）
 - 代理套件 / Proxy suites（daed、homeproxy、openclash、passwall2）
+- DNS 服务 / DNS services（adguard、mosdns）
+- 系统工具扩展 / System tools extras（frpc、frps、ttyd 等）
 - Docker / 存储 / Docker and storage（common、docker）
 - 常用系统工具 / Common system tools
 - 网络增强 / Network enhancements（基础包 + ddns、wireguard、upnp 等）
 - 旁路由预设 / Bypass-router preset
 
-Daed（内核级 eBPF 代理）通过 `packages/dae/` 本地安装 QiuSimons/luci-app-daed，
-无需外部 feed。该构建需要完整源码编译（`make source`），不适合 ImageBuilder。  
-Daed (kernel-level eBPF proxy) is installed locally via `packages/dae/` (QiuSimons/luci-app-daed),
-no external feed required. It requires full source builds (`make source`), not ImageBuilder.
+社区包（daed、luci-app-adguardhome、luci-theme-argon）通过 `packages/` 本地安装，无需外部 feed。这些需要完整源码编译（`make source`），不适合 ImageBuilder。
+Community packages (daed, luci-app-adguardhome, luci-theme-argon) are installed locally via `packages/`, no external feeds required. They need full source builds (`make source`), not ImageBuilder.
 
 默认仍然保持保守：主路径使用 ImageBuilder，小而稳的基础包为默认值，社区主题与代理套件作为可选组件暴露。  
 The default remains conservative: the main path still uses ImageBuilder, a small stable base package set remains default, and community themes plus proxy suites are exposed as optional bundles.

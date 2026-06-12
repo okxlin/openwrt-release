@@ -42,6 +42,12 @@ make source-build CONFIG_FILE=configs/source/proxy-x86_64.config
 make source-build CONFIG_FILE=configs/source/dae-x86_64.config
 ```
 
+# DNS（AdGuard Home + MosDNS）
+make source-build CONFIG_FILE=configs/source/dns-x86_64.config
+
+# 全部（55+ 包，all-in-one）
+make source-build CONFIG_FILE=configs/source/all-x86_64.config
+
 源码编译需数小时，仅当需要内核模块（如 daed）时使用。
 
 ## 组件选择 / Component Selection
@@ -75,7 +81,7 @@ luci-theme-argon
 
 ## 自定义包 / Custom Packages
 
-`packages/` 目录存放非官方 feed 的包（如 `luci-app-homeproxy`、`luci-app-daed`）。
+`packages/` 目录存放非官方 feed 的包（如 `luci-app-homeproxy`、`luci-app-daed`、`luci-app-adguardhome`、`luci-theme-argon`）。
 
 - **ImageBuilder 不可用** — 自定义包仅适用于完整源码编译（`make source`）
 - 构建时自动复制到 `package/custom/`，OpenWrt 递归扫描 Makefile
@@ -123,8 +129,6 @@ A: 找到对应的 `categories/<name>.txt`，添加包名到末尾。如果是�
 **Q: 怎么换设备？**
 A: 复制 `configs/imagebuilder/example-x86_64.env` 或 `example-bcm2711.env`，修改 `OPENWRT_TARGET` / `OPENWRT_SUBTARGET` / `OPENWRT_PROFILE` / `IMAGEBUILDER_NAME`。详见上方 ARM 设备表格。
 
-**Q: ImageBuilder 和 source build 选哪个？**
-A: 绝大多数场景用 ImageBuilder（10 分钟）。仅在需要内核模块（daed）、补丁、或社区 feeds 时用 source build（数小时）。
+A: ImageBuilder（10 分钟）覆盖大多数场景。仅在需要内核模块（daed）、社区 feeds（openclash、passwall2、mosdns、easytier 等）、或社区包（luci-app-adguardhome、luci-theme-argon）时用 source build（数小时）。
 
-**Q: 为什么 daed 构建失败？**
-A: daed 需要 Go >= 1.26，OpenWrt 24.10 默认 Go 1.23。`build-source.sh` 会自动检测 `CONFIG_PACKAGE_daed=y` 并 patch golang 包到 1.26。确保系统已安装 Go 1.26.4 到 `/usr/local/go`。
+A: daed 和 mosdns 的 v2dat 都依赖 Go >= 1.26，而 OpenWrt 24.10 默认 Go 1.23。`build-source.sh` 会自动检测 `CONFIG_PACKAGE_daed=y|CONFIG_PACKAGE_mosdns=y` 并 patch golang 到 1.26。确保系统已安装 Go 1.26.4 到 `/usr/local/go`。
