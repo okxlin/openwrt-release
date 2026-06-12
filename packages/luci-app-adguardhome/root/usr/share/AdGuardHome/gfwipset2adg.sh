@@ -8,4 +8,4 @@ if [ -z "$configpath" ] || [ ! -f "$configpath" ]; then
     exit 1
 fi
 
-exec "$LUA" "$LUA_SCRIPT" --mode=upstream "$@"
+exec "$LUA" "$LUA_SCRIPT" --mode=ipset "$@"

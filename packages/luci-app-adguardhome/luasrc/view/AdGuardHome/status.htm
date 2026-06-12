@@ -1,19 +1,22 @@
 <script type="text/javascript">//<![CDATA[
 XHR.poll(3, '<%=url([[admin]], [[services]], [[AdGuardHome]], [[status]])%>', null,
 	function(x, data) {
-		var tb = document.getElementById('AdGuardHome_status');
+		const tb = document.getElementById('AdGuardHome_status');
 		if (data && tb) {
+			let status = '';
 			if (data.running) {
-				tb.innerHTML = '<em><b><font color=green>AdGuardHome <%:RUNNING%></font></b></em>';
+				status += '<font color=green>AdGuard Home <%:RUNNING%></font>';
 			} else {
-				tb.innerHTML = '<em><b><font color=red>AdGuardHome <%:NOT RUNNING%></font></b></em>';
+				status += '<font color=red>AdGuard Home <%:NOT RUNNING%></font>';
 			}
+			status += ' ';
 			if (data.redirect)
 			{
-				tb.innerHTML+='<em><b><font color=green><%:Redirected%></font></b></em>'
+				status += '<font color=green>(<%:Redirected%>)</font>'
 			} else {
-				tb.innerHTML+='<em><b><font color=red><%:Not redirect%></font></b></em>'	
+				status += '<font color=red>(<%:Not redirected%>)</font>'
 			}
+			tb.innerHTML = `<em><b>${status}</b></em>`;
 		}
 	}
 );
