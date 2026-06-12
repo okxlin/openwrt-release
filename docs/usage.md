@@ -40,13 +40,13 @@ make source-build CONFIG_FILE=configs/source/proxy-x86_64.config
 
 # Daed（eBPF 内核代理 + homeproxy）
 make source-build CONFIG_FILE=configs/source/dae-x86_64.config
-```
 
 # DNS（AdGuard Home + MosDNS）
 make source-build CONFIG_FILE=configs/source/dns-x86_64.config
 
 # 全部（55+ 包，all-in-one）
 make source-build CONFIG_FILE=configs/source/all-x86_64.config
+```
 
 源码编译需数小时，仅当需要内核模块（如 daed）时使用。
 
