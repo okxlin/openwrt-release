@@ -56,6 +56,20 @@ fi
 
 export FORCE_UNSAFE_CONFIGURE=1
 make defconfig
+
+# Community feed packages may be stripped by make defconfig due to recursive
+# dependency resolution; re-enable them if they were in the original config
+if [[ -f "$ROOT_DIR/$CONFIG_FILE" ]]; then
+  for symbol in $(grep '^CONFIG_PACKAGE_.*=y$' "$ROOT_DIR/$CONFIG_FILE" | sed 's/^CONFIG_PACKAGE_//;s/=y$//'); do
+    if grep -q "CONFIG_PACKAGE_$symbol" tmp/.config-package.in 2>/dev/null && \
+       ! grep -q "CONFIG_PACKAGE_$symbol=y" .config 2>/dev/null; then
+      log "Re-enabling stripped package: $symbol"
+      echo "CONFIG_PACKAGE_$symbol=y" >> .config
+    fi
+  done
+  make olddefconfig
+fi
+
 make -j"$(nproc)"
 popd >/dev/null
 
