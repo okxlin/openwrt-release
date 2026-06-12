@@ -110,7 +110,7 @@ write_key_value_file "$OUTPUT_COMPONENTS" \
   "component_network=$COMPONENT_NETWORK" \
   "component_bypass=$COMPONENT_BYPASS" \
   "component_dns=$COMPONENT_DNS" \
-  "component_image=$COMPONENT_IMAGE"
+  "component_image=$COMPONENT_IMAGE" \
   "component_extras=$COMPONENT_EXTRAS" \
 
 printf '%s\n' "$OUTPUT_MANIFEST"
