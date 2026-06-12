@@ -22,10 +22,9 @@ if [[ -n "${BUILD_TAG:-}" ]]; then
   ver="${OPENWRT_VERSION:-openwrt}"
   log "Renaming artifacts with tag: ${ver}-${BUILD_TAG}"
   while IFS= read -r -d '' img; do
-    local dir="$(dirname "$img")"
-    local base="$(basename "$img")"
-    # Strip 'openwrt-' prefix, replace with version-tag-
-    local new_base="${base#openwrt-}"
+    dir="$(dirname "$img")"
+    base="$(basename "$img")"
+    new_base="${base#openwrt-}"
     new_base="${ver}-${BUILD_TAG}-${new_base}"
     mv "$img" "${dir}/${new_base}"
     log "  $(basename "$img") -> ${new_base}"
