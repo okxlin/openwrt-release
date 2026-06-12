@@ -27,8 +27,11 @@ This is the advanced build path and is manual-only by default.
 
 ## release.yml
 
-用于在 tag 或手动触发时重新构建 ImageBuilder 固件并发布 release。手动触发时需要显式提供 `release_tag`。  
+用于在 tag 或手动触发时重新构建 ImageBuilder 固件并发布 release。手动触发时需要显式提供 `release_tag`。
 Used to rebuild ImageBuilder firmware and publish a release on tag pushes or manual dispatch. Manual dispatch requires an explicit `release_tag`.
+
+所有构建路径（ImageBuilder / source-build / release）均支持可选的 `build_tag` 输入。设置后固件文件名将包含 `OPENWRT_VERSION-BUILD_TAG-` 前缀。
+All build paths (ImageBuilder / source-build / release) support an optional `build_tag` input. When set, firmware filenames will include an `OPENWRT_VERSION-BUILD_TAG-` prefix.
 
 ## 设计建议 / Design Recommendations
 

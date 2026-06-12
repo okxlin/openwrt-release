@@ -28,6 +28,9 @@ make qa
 # 默认构建（base + tools + stock theme + enhanced network + common storage）
 make imagebuilder
 
+# 带 BUILD_TAG 的构建
+BUILD_TAG=v1.0 make imagebuilder
+
 # 自定义 env 文件
 bash scripts/build-imagebuilder.sh configs/imagebuilder/my-device.env
 ```
@@ -36,7 +39,7 @@ bash scripts/build-imagebuilder.sh configs/imagebuilder/my-device.env
 
 ```bash
 # Homeproxy（sing-box 代理）
-make source-build CONFIG_FILE=configs/source/proxy-x86_64.config
+BUILD_TAG=v1.0 make source-build CONFIG_FILE=configs/source/proxy-x86_64.config
 
 # Daed（eBPF 内核代理 + homeproxy）
 make source-build CONFIG_FILE=configs/source/dae-x86_64.config
@@ -45,7 +48,7 @@ make source-build CONFIG_FILE=configs/source/dae-x86_64.config
 make source-build CONFIG_FILE=configs/source/dns-x86_64.config
 
 # 全部（55+ 包，all-in-one）
-make source-build CONFIG_FILE=configs/source/all-x86_64.config
+BUILD_TAG=v1.0 make source-build CONFIG_FILE=configs/source/all-x86_64.config
 ```
 
 源码编译需数小时，仅当需要内核模块（如 daed）时使用。
@@ -132,3 +135,8 @@ A: 复制 `configs/imagebuilder/example-x86_64.env` 或 `example-bcm2711.env`，
 A: ImageBuilder（10 分钟）覆盖大多数场景。仅在需要内核模块（daed）、社区 feeds（openclash、passwall2、mosdns、easytier 等）、或社区包（luci-app-adguardhome、luci-theme-argon）时用 source build（数小时）。
 
 A: daed 和 mosdns 的 v2dat 都依赖 Go >= 1.26，而 OpenWrt 24.10 默认 Go 1.23。`build-source.sh` 会自动检测 `CONFIG_PACKAGE_daed=y|CONFIG_PACKAGE_mosdns=y` 并 patch golang 到 1.26。确保系统已安装 Go 1.26.4 到 `/usr/local/go`。
+**Q: 怎么给固件文件加 tag？**
+A: 设置 `BUILD_TAG` 环境变量，构建后固件名会自动包含版本号和 tag。
+例如 `BUILD_TAG=v1.0` 生成 `24.10.7-v1.0-x86-64-generic-squashfs-combined-efi.img.gz`。
+GitHub Actions 上通过 `build_tag` 输入参数控制。
+

@@ -160,9 +160,7 @@ Copy an existing `configs/imagebuilder/*.env` file and update:
 - `proxy`
 - `dns`
 - `tools`
-
-> OpenClash 构建时，`build-source.sh` 会自动从 GitHub releases 下载 Meta 核心（mihomo），并放入固件根，确保开箱即用。
-> For OpenClash builds, `build-source.sh` auto-downloads the Meta core (mihomo) from GitHub releases and places it in the firmware root for ready use.
+- `build_tag`
 - `storage`
 - `network`
 - `bypass`
