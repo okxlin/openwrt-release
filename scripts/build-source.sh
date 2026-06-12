@@ -67,7 +67,8 @@ if [[ -f "$ROOT_DIR/$CONFIG_FILE" ]]; then
       echo "CONFIG_PACKAGE_$symbol=y" >> .config
     fi
   done
-  make olddefconfig
+  # Note: skipping make olddefconfig; recursive deps would strip
+  # community packages again. make world handles config internally.
 fi
 
 make -j"$(nproc)"
