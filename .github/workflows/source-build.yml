@@ -3,10 +3,23 @@ name: Full Source OpenWrt
 on:
   workflow_dispatch:
     inputs:
-      config:
-        description: Source build config file (e.g. example-x86_64, dae-x86_64, dns-x86_64)
+      preset:
+        description: Config preset (all-x86_64, example-x86_64, dae-x86_64, dns-x86_64, proxy-x86_64, custom)
         required: false
-        default: configs/source/example-x86_64.config
+        type: choice
+        default: all-x86_64
+        options:
+          - all-x86_64
+          - example-x86_64
+          - example-bcm2711
+          - dae-x86_64
+          - dns-x86_64
+          - proxy-x86_64
+          - custom
+      custom-config:
+        description: Custom config path (only used when preset=custom, e.g. configs/source/my.config)
+        required: false
+        default: ""
 
 concurrency:
   group: source-build-${{ github.ref }}
@@ -18,7 +31,8 @@ jobs:
     permissions:
       contents: read
     env:
-      SOURCE_CONFIG: ${{ inputs.config || 'configs/source/example-x86_64.config' }}
+      SOURCE_CONFIG: >-
+        ${{ inputs.custom-config != '' && inputs.custom-config || format('configs/source/{0}.config', inputs.preset) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
