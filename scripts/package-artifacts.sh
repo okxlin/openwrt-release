@@ -16,6 +16,22 @@ ensure_dir "$DEST_DIR"
 
 cp -R "$SOURCE_ARTIFACT_DIR"/. "$DEST_DIR/"
 
+# If BUILD_TAG is set, rename firmware images to include version and tag
+# Example: openwrt-24.10.7-v1.0-x86-64-generic-squashfs-combined-efi.img.gz
+if [[ -n "${BUILD_TAG:-}" ]]; then
+  ver="${OPENWRT_VERSION:-openwrt}"
+  log "Renaming artifacts with tag: ${ver}-${BUILD_TAG}"
+  while IFS= read -r -d '' img; do
+    local dir="$(dirname "$img")"
+    local base="$(basename "$img")"
+    # Strip 'openwrt-' prefix, replace with version-tag-
+    local new_base="${base#openwrt-}"
+    new_base="${ver}-${BUILD_TAG}-${new_base}"
+    mv "$img" "${dir}/${new_base}"
+    log "  $(basename "$img") -> ${new_base}"
+  done < <(find "$DEST_DIR" -name '*.img.gz' -print0)
+fi
+
 if [[ -d "$DEST_DIR/metadata" ]]; then
   log "Preserving metadata directory in $DEST_DIR/metadata"
 fi

@@ -49,6 +49,11 @@ on:
         description: Extra tools (none or extras)
         required: false
         default: none
+      build_tag:
+        description: Optional build tag for firmware file naming (e.g., v1.0)
+        required: false
+        default: ''
+
 
 
 concurrency:
@@ -70,6 +75,7 @@ jobs:
       COMPONENT_NETWORK: ${{ inputs.network || 'enhanced' }}
       COMPONENT_BYPASS: ${{ inputs.bypass || 'off' }}
       COMPONENT_EXTRAS: ${{ inputs.tools || 'none' }}
+      BUILD_TAG: ${{ inputs.build_tag || '' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6

@@ -89,6 +89,8 @@ fi
 make -j"$(nproc)"
 popd >/dev/null
 
+# Export OpenWrt version for package-artifacts.sh BUILD_TAG renaming
+export OPENWRT_VERSION=$(sed -n 's/.*VERSION_NUMBER.*,\([^)]*\).*/\1/p' "$SOURCE_DIR/include/version.mk" | head -1)
 bash "$SCRIPT_DIR/package-artifacts.sh" "$SOURCE_DIR/bin/targets" "$OUTPUT_DIR"
 
 log "Full source build completed."

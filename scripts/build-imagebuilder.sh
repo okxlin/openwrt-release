@@ -74,6 +74,7 @@ if [[ -f "$IMAGEBUILDER_DIR/bin/targets/$OPENWRT_TARGET/$OPENWRT_SUBTARGET/profi
   cp "$IMAGEBUILDER_DIR/bin/targets/$OPENWRT_TARGET/$OPENWRT_SUBTARGET/profiles.json" "$METADATA_DIR/profiles.json"
 fi
 
+export OPENWRT_VERSION
 bash "$SCRIPT_DIR/package-artifacts.sh" "$IMAGEBUILDER_DIR/bin/targets/$OPENWRT_TARGET/$OPENWRT_SUBTARGET" "$OUTPUT_DIR"
 
 log "ImageBuilder build completed."
