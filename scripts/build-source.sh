@@ -20,6 +20,13 @@ require_dir "$SOURCE_DIR"
 pushd "$SOURCE_DIR" >/dev/null
 ./scripts/feeds update -a
 ./scripts/feeds install -a
+# If local package conflicts with feed, remove feed version
+# (e.g., luci-app-adguardhome in sbwml_pkgs is v1.8, local is v1.19)
+if [[ -d "$SOURCE_DIR/package/custom/luci-app-adguardhome" ]] && [[ -d "$SOURCE_DIR/feeds/sbwml_pkgs/luci-app-adguardhome" ]]; then
+  log 'Removing feed luci-app-adguardhome in favor of local package'
+  rm -rf "$SOURCE_DIR/feeds/sbwml_pkgs/luci-app-adguardhome"
+fi
+
 
 # If daed or mosdns is selected, patch golang to Go 1.26 for compatibility
 # daed requires Go >= 1.26.0; mosdns v2dat requires Go >= 1.25.0
