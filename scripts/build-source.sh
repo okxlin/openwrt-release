@@ -76,6 +76,15 @@ if [[ -f "$ROOT_DIR/$CONFIG_FILE" ]]; then
   done
   # Note: skipping make olddefconfig; recursive deps would strip
   # community packages again. make world handles config internally.
+
+  # LuCI i18n packages use auto-generated config symbols not present
+  # in .config-package.in; force-add them directly from original config
+  for symbol in $(grep '^CONFIG_PACKAGE_luci-i18n.*=y$' "$ROOT_DIR/$CONFIG_FILE" | sed 's/=y$//'); do
+    if ! grep -q "${symbol}=y" .config 2>/dev/null; then
+      log "Force-adding i18n package: ${symbol#CONFIG_PACKAGE_}"
+      echo "${symbol}=y" >> .config
+    fi
+  done
 fi
 
 make -j"$(nproc)"
