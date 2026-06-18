@@ -32,6 +32,11 @@ ensure_dir() {
   mkdir -p "$dir_path"
 }
 
+require_command() {
+  local command_name="$1"
+  command -v "$command_name" >/dev/null 2>&1 || die "Required command not found: $command_name"
+}
+
 require_linux_host() {
   local kernel_name
   kernel_name="$(uname -s)"

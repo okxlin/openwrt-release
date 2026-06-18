@@ -58,6 +58,9 @@ It uses two build paths by default:
 本地构建仅支持 Linux 主机；Windows 或 MSYS 环境只适合编辑和静态校验，不适合执行 OpenWrt 的 ImageBuilder 或完整源码构建。  
 Local builds are supported only on Linux hosts. Windows or MSYS environments are suitable for editing and static validation, but not for running OpenWrt ImageBuilder or full source builds.
 
+本地 ImageBuilder 需要 `bash`, `curl`, `file`, `gawk`, `git`, `make`, `python3`/`PyYAML`, `rsync`, `xz` 和 `zstd`。
+Local ImageBuilder builds require `bash`, `curl`, `file`, `gawk`, `git`, `make`, `python3`/`PyYAML`, `rsync`, `xz`, and `zstd`.
+
 如果你希望在 Linux 主机上一键完成“校验 + ImageBuilder 构建”，可以直接运行下面的配套脚本：  
 If you want a single Linux entrypoint that runs validation and then performs the ImageBuilder build, use the helper script below:
 

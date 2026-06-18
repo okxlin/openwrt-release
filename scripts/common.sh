@@ -72,6 +72,24 @@ resolve_imagebuilder_components() {
   : "${COMPONENT_EXTRAS:=none}"
 }
 
+copy_imagebuilder_base_files() {
+  local source_dir="$1"
+  local destination_dir="$2"
+
+  require_dir "$source_dir"
+  ensure_dir "$destination_dir"
+  rsync -a --exclude '/presets/' "$source_dir"/ "$destination_dir"/
+}
+
+copy_imagebuilder_preset_files() {
+  local source_dir="$1"
+  local destination_dir="$2"
+
+  require_dir "$source_dir"
+  ensure_dir "$destination_dir"
+  rsync -a "$source_dir"/ "$destination_dir"/
+}
+
 join_packages() {
   local packages_file="$1"
   require_file "$packages_file"

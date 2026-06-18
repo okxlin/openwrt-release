@@ -5,7 +5,7 @@
 | 方式 / Method | 要求 / Requirements |
 |---|---|
 | GitHub Actions | 零配置 — ubuntu-latest runner 自带所有依赖 |
-| 本地 Linux | bash, curl, git, make, python3, PyYAML, xz, zstd |
+| 本地 Linux | bash, curl, file, gawk, git, make, python3, PyYAML, rsync, xz, zstd |
 | 本地源码编译 | 额外需要 Go 1.26+ (`/usr/local/go`)、clang/llvm、30GB 磁盘 |
 
 Windows / macOS 不能用于构建，仅限于编辑仓库文件。
@@ -139,4 +139,3 @@ A: daed 和 mosdns 的 v2dat 都依赖 Go >= 1.26，而 OpenWrt 24.10 默认 Go 
 A: 设置 `BUILD_TAG` 环境变量，构建后固件名会自动包含版本号和 tag。
 例如 `BUILD_TAG=v1.0` 生成 `24.10.7-v1.0-x86-64-generic-squashfs-combined-efi.img.gz`。
 GitHub Actions 上通过 `build_tag` 输入参数控制。
-

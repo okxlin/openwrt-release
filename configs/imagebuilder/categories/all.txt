@@ -14,12 +14,10 @@ ddns-scripts
 luci-app-adblock-fast
 luci-app-banip
 luci-app-ddns
-luci-app-sqm
 luci-app-upnp
 luci-app-watchcat
 luci-proto-wireguard
 miniupnpd-nftables
-sqm-scripts
 bash
 coreutils-timeout
 iperf3

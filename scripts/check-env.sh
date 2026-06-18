@@ -70,19 +70,19 @@ check_structure() {
 
 check_firewall_stack() {
   local failed=0
-  local package_pattern='^(iptables|ip6tables|iptables-nft|iptables-legacy|ip6tables-legacy|iptables-mod-.*|ip6tables-mod-.*|kmod-ipt-.*)$'
-  local config_pattern='^CONFIG_PACKAGE_(iptables|ip6tables|iptables-nft|iptables-legacy|ip6tables-legacy|iptables-mod-.*|ip6tables-mod-.*|kmod-ipt-.*)=y$'
+  local package_pattern='^(iptables|ip6tables|iptables-nft|iptables-legacy|ip6tables-legacy|iptables-zz-legacy|iptables-mod-.*|ip6tables-mod-.*|xtables.*|kmod-ipt-.*|luci-app-sqm|sqm-scripts)$'
+  local config_pattern='^CONFIG_PACKAGE_(iptables|ip6tables|iptables-nft|iptables-legacy|ip6tables-legacy|iptables-zz-legacy|iptables-mod-.*|ip6tables-mod-.*|xtables.*|kmod-ipt-.*|luci-app-sqm|sqm-scripts)=y$'
 
   while IFS= read -r file; do
     while IFS= read -r line; do
-      printf 'Forbidden explicit xtables package in %s: %s\n' "$file" "$line" >&2
+      printf 'Forbidden explicit legacy firewall package in %s: %s\n' "$file" "$line" >&2
       failed=1
     done < <(awk -v pattern="$package_pattern" 'NF && $1 !~ /^#/ && $1 ~ pattern { print NR ":" $1 }' "$file")
   done < <(find "$ROOT_DIR/configs/imagebuilder" -type f -name '*.txt' | sort)
 
   while IFS= read -r file; do
     while IFS= read -r line; do
-      printf 'Forbidden explicit xtables config in %s: %s\n' "$file" "$line" >&2
+      printf 'Forbidden explicit legacy firewall config in %s: %s\n' "$file" "$line" >&2
       failed=1
     done < <(awk -v pattern="$config_pattern" '$0 ~ pattern { print NR ":" $0 }' "$file")
   done < <(find "$ROOT_DIR/configs/source" -type f -name '*.config' | sort)
@@ -162,9 +162,28 @@ check_imagebuilder_overrides() {
   resolve_imagebuilder_components
 
   [[ "$COMPONENT_BYPASS" == "on" ]] || die "ImageBuilder override preset did not enable COMPONENT_BYPASS."
-  [[ "$COMPONENT_PROXY" == "homeproxy" ]] || die "ImageBuilder override preset did not apply COMPONENT_PROXY."
+  [[ "$COMPONENT_PROXY" == "none" ]] || die "Bypass ImageBuilder preset should not require source-only proxy packages."
 
   log "ImageBuilder override validation passed."
+}
+
+check_imagebuilder_overlay_copy() {
+  local temp_dir source_dir dest_dir
+  temp_dir="$(mktemp -d)"
+  source_dir="$temp_dir/source"
+  dest_dir="$temp_dir/dest"
+  trap 'rm -rf "$temp_dir"' RETURN
+
+  mkdir -p "$source_dir/etc" "$source_dir/presets/bypass-router/etc"
+  printf '%s\n' base > "$source_dir/etc/base"
+  printf '%s\n' preset > "$source_dir/presets/bypass-router/etc/preset"
+
+  copy_imagebuilder_base_files "$source_dir" "$dest_dir"
+
+  [[ -f "$dest_dir/etc/base" ]] || die "ImageBuilder base overlay copy missed files/etc content."
+  [[ ! -e "$dest_dir/presets" ]] || die "ImageBuilder base overlay copy leaked files/presets into rootfs."
+
+  log "ImageBuilder overlay copy validation passed."
 }
 
 case "$MODE" in
@@ -185,6 +204,7 @@ case "$MODE" in
     ;;
   imagebuilder)
     check_imagebuilder_overrides
+    check_imagebuilder_overlay_copy
     ;;
   all)
     check_shell
@@ -193,6 +213,7 @@ case "$MODE" in
     check_firewall_stack
     check_bypass_preset
     check_imagebuilder_overrides
+    check_imagebuilder_overlay_copy
     ;;
   *)
     die "Unknown mode: $MODE"
