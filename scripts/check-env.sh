@@ -3,13 +3,13 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=scripts/lib.sh
-source "$SCRIPT_DIR/lib.sh"
+# shellcheck source=scripts/common.sh
+source "$SCRIPT_DIR/common.sh"
 
 MODE="${2:-}"
 
 if [[ "${1:-}" != "--mode" ]] || [[ -z "$MODE" ]]; then
-  die "Usage: bash scripts/check-env.sh --mode <shell|yaml|structure|firewall|bypass|all>"
+  die "Usage: bash scripts/check-env.sh --mode <shell|yaml|structure|firewall|bypass|imagebuilder|all>"
 fi
 
 check_shell() {
@@ -156,6 +156,17 @@ check_bypass_preset() {
   log "Bypass router preset validation passed."
 }
 
+check_imagebuilder_overrides() {
+  load_env_file "$ROOT_DIR/configs/imagebuilder/example-x86_64.env"
+  OVERRIDE_PRESET_FILE="$ROOT_DIR/configs/imagebuilder/presets/bypass-router.env"
+  resolve_imagebuilder_components
+
+  [[ "$COMPONENT_BYPASS" == "on" ]] || die "ImageBuilder override preset did not enable COMPONENT_BYPASS."
+  [[ "$COMPONENT_PROXY" == "homeproxy" ]] || die "ImageBuilder override preset did not apply COMPONENT_PROXY."
+
+  log "ImageBuilder override validation passed."
+}
+
 case "$MODE" in
   shell)
     check_shell
@@ -172,12 +183,16 @@ case "$MODE" in
   bypass)
     check_bypass_preset
     ;;
+  imagebuilder)
+    check_imagebuilder_overrides
+    ;;
   all)
     check_shell
     check_yaml
     check_structure
     check_firewall_stack
     check_bypass_preset
+    check_imagebuilder_overrides
     ;;
   *)
     die "Unknown mode: $MODE"

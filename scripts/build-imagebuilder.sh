@@ -10,6 +10,7 @@ ENV_FILE="${1:-}"
 [[ -n "$ENV_FILE" ]] || die "Usage: bash scripts/build-imagebuilder.sh <env-file>"
 
 load_env_file "$ENV_FILE"
+resolve_imagebuilder_components
 bash "$SCRIPT_DIR/prepare-imagebuilder.sh" "$ENV_FILE"
 
 if [[ -n "${PRESET_FILE:-}" || -n "${COMPONENT_THEMES:-}" || -n "${COMPONENT_PROXY:-}" || -n "${COMPONENT_STORAGE:-}" || -n "${COMPONENT_NETWORK:-}" || -n "${COMPONENT_BYPASS:-}" || -n "${COMPONENT_IMAGE:-}" ]]; then
