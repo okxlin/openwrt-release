@@ -9,7 +9,7 @@ source "$SCRIPT_DIR/lib.sh"
 MODE="${2:-}"
 
 if [[ "${1:-}" != "--mode" ]] || [[ -z "$MODE" ]]; then
-  die "Usage: bash scripts/check-env.sh --mode <shell|yaml|structure|firewall|all>"
+  die "Usage: bash scripts/check-env.sh --mode <shell|yaml|structure|firewall|bypass|all>"
 fi
 
 check_shell() {
@@ -110,6 +110,52 @@ check_firewall_stack() {
   log "Firewall stack validation passed."
 }
 
+check_bypass_preset() {
+  local preset_script="$ROOT_DIR/files/presets/bypass-router/etc/uci-defaults/30-bypass-router"
+  require_file "$preset_script"
+  bash -n "$preset_script"
+
+  local temp_dir uci_log fake_uci
+  temp_dir="$(mktemp -d)"
+  uci_log="$temp_dir/uci.log"
+  fake_uci="$temp_dir/uci"
+  trap 'rm -rf "$temp_dir"' RETURN
+
+  {
+    printf '%s\n' '#!/usr/bin/env sh'
+    printf '%s\n' 'if [ "$*" = "-q show firewall" ]; then'
+    printf '%s\n' "  printf '%s\n' \"firewall.@zone[0].name='lan'\""
+    printf '%s\n' 'fi'
+    printf '%s\n' 'printf "%s\n" "$*" >> "$UCI_LOG"'
+  } > "$fake_uci"
+  chmod +x "$fake_uci"
+
+  UCI_LOG="$uci_log" PATH="$temp_dir:$PATH" sh "$preset_script"
+
+  local required_commands=(
+    "-q set network.lan.proto=static"
+    "-q set network.lan.ipaddr=10.0.0.2"
+    "-q set network.lan.netmask=255.255.255.0"
+    "-q set network.lan.gateway=10.0.0.1"
+    "-q add_list network.lan.dns=10.0.0.1"
+    "-q set dhcp.lan.ignore=1"
+    "-q set dhcp.lan.ra=disabled"
+    "-q set dhcp.lan.dhcpv6=disabled"
+    "-q set dhcp.lan.ndp=disabled"
+    "-q set firewall.@zone[0].forward=ACCEPT"
+    "-q commit network"
+    "-q commit dhcp"
+    "-q commit firewall"
+  )
+
+  local command
+  for command in "${required_commands[@]}"; do
+    grep -Fx -- "$command" "$uci_log" >/dev/null || die "Bypass preset missing UCI command: $command"
+  done
+
+  log "Bypass router preset validation passed."
+}
+
 case "$MODE" in
   shell)
     check_shell
@@ -123,11 +169,15 @@ case "$MODE" in
   firewall)
     check_firewall_stack
     ;;
+  bypass)
+    check_bypass_preset
+    ;;
   all)
     check_shell
     check_yaml
     check_structure
     check_firewall_stack
+    check_bypass_preset
     ;;
   *)
     die "Unknown mode: $MODE"

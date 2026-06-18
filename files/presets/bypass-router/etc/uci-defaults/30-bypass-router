@@ -1,9 +1,31 @@
 #!/bin/sh
 
-uci -q set network.lan.ipaddr='192.168.2.1'
-uci -q set network.lan.netmask='255.255.255.0'
+lan_ip="${BYPASS_LAN_IP:-10.0.0.2}"
+lan_netmask="${BYPASS_LAN_NETMASK:-255.255.255.0}"
+lan_gateway="${BYPASS_LAN_GATEWAY:-10.0.0.1}"
+lan_dns="${BYPASS_LAN_DNS:-$lan_gateway}"
+
+uci -q set network.lan.proto='static'
+uci -q set network.lan.ipaddr="$lan_ip"
+uci -q set network.lan.netmask="$lan_netmask"
+uci -q set network.lan.gateway="$lan_gateway"
+uci -q delete network.lan.dns
+for dns_server in $lan_dns; do
+	uci -q add_list network.lan.dns="$dns_server"
+done
+
 uci -q set dhcp.lan.ignore='1'
+uci -q set dhcp.lan.ra='disabled'
+uci -q set dhcp.lan.dhcpv6='disabled'
+uci -q set dhcp.lan.ndp='disabled'
+
+lan_zone="$(uci -q show firewall | sed -n "s/^\(firewall\.@zone\[[0-9][0-9]*\]\)\.name='lan'$/\1/p" | head -n 1)"
+[ -n "$lan_zone" ] || lan_zone='firewall.@zone[0]'
+uci -q set "$lan_zone.forward=ACCEPT"
+uci -q set "$lan_zone.masq=0"
+
 uci -q commit network
 uci -q commit dhcp
+uci -q commit firewall
 
 exit 0

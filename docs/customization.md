@@ -136,6 +136,9 @@ Place files under `files/`, and keep the path structure consistent with the Open
 旁路由预设还会使用 `files/presets/bypass-router/` 中的覆盖文件。  
 The bypass-router preset also uses overlay files under `files/presets/bypass-router/`.
 
+当前旁路由默认值参考 Kwrt 的 `10.0.0.0/24` 网段思路，但保持 OpenWrt 24.10 的 fw4/nftables 栈：LAN 地址为 `10.0.0.2/24`，上游网关和 DNS 为 `10.0.0.1`，DHCP、RA、DHCPv6 和 NDP 默认关闭，LAN 防火墙转发设为 `ACCEPT`。如需接入已有主路由网段，编辑 `files/presets/bypass-router/etc/uci-defaults/30-bypass-router` 顶部变量即可。
+The current bypass-router defaults follow Kwrt's `10.0.0.0/24` network convention while keeping OpenWrt 24.10 on fw4/nftables: LAN address `10.0.0.2/24`, upstream gateway and DNS `10.0.0.1`, DHCP, RA, DHCPv6, and NDP disabled by default, and LAN firewall forwarding set to `ACCEPT`. To join an existing upstream subnet, edit the variables at the top of `files/presets/bypass-router/etc/uci-defaults/30-bypass-router`.
+
 ## 新增设备配置 / Add a New Device Profile
 
 复制一个 `configs/imagebuilder/*.env` 文件，修改：  
