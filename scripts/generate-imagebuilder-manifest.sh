@@ -39,7 +39,7 @@ append_category "theme-$COMPONENT_THEMES"
 append_category "network-$COMPONENT_NETWORK"
 append_category "storage-$COMPONENT_STORAGE"
 append_category "dns-$COMPONENT_DNS"
-append_category "tools-extras"
+append_category "tools-$COMPONENT_EXTRAS"
 
 
 if [[ "$COMPONENT_PROXY" != "none" ]]; then

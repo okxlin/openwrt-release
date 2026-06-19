@@ -198,6 +198,36 @@ check_imagebuilder_overlay_copy() {
   log "ImageBuilder overlay copy validation passed."
 }
 
+check_imagebuilder_component_manifest() {
+  local temp_dir manifest components extra_package
+  temp_dir="$(mktemp -d)"
+  trap 'rm -rf "$temp_dir"' RETURN
+  manifest="$temp_dir/generated-packages.txt"
+  components="$temp_dir/generated-components.txt"
+
+  OVERRIDE_COMPONENT_EXTRAS=none \
+    GENERATED_PACKAGES_FILE="$manifest" \
+    GENERATED_COMPONENTS_FILE="$components" \
+    bash "$ROOT_DIR/scripts/generate-imagebuilder-manifest.sh" \
+      "$ROOT_DIR/configs/imagebuilder/example-x86_64.env" >/dev/null
+
+  for extra_package in luci-app-frpc luci-app-frps luci-app-ttyd; do
+    ! grep -Fx -- "$extra_package" "$manifest" >/dev/null || die "ImageBuilder tools extras package should be opt-in: $extra_package"
+  done
+
+  OVERRIDE_COMPONENT_EXTRAS=extras \
+    GENERATED_PACKAGES_FILE="$manifest" \
+    GENERATED_COMPONENTS_FILE="$components" \
+    bash "$ROOT_DIR/scripts/generate-imagebuilder-manifest.sh" \
+      "$ROOT_DIR/configs/imagebuilder/example-x86_64.env" >/dev/null
+
+  for extra_package in luci-app-frpc luci-app-frps luci-app-ttyd; do
+    grep -Fx -- "$extra_package" "$manifest" >/dev/null || die "ImageBuilder tools extras package missing when enabled: $extra_package"
+  done
+
+  log "ImageBuilder component manifest validation passed."
+}
+
 case "$MODE" in
   shell)
     check_shell
@@ -217,6 +247,7 @@ case "$MODE" in
   imagebuilder)
     check_imagebuilder_overrides
     check_imagebuilder_overlay_copy
+    check_imagebuilder_component_manifest
     ;;
   all)
     check_shell
@@ -226,6 +257,7 @@ case "$MODE" in
     check_bypass_preset
     check_imagebuilder_overrides
     check_imagebuilder_overlay_copy
+    check_imagebuilder_component_manifest
     ;;
   *)
     die "Unknown mode: $MODE"

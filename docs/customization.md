@@ -12,14 +12,12 @@ The current 80/20 categories include:
 - 代理套件 / Proxy suites
 - DNS 套件 / DNS suites
 - 系统工具扩展 / System tools extras（extras：frpc、frps、ttyd 等 / includes frpc, frps, ttyd, etc.）
-- Docker / 存储 / Docker and storage
+- 存储 / Storage（Docker 显式 opt-in / Docker is explicit opt-in）
 - 常用系统工具 / Common system tools
 - 网络增强 / Network enhancements
 - 旁路由预设 / Bypass-router preset
 
 这些分类文件位于 `configs/imagebuilder/categories/`。  
-These category files live under `configs/imagebuilder/categories/`.
-这些分类文件位于 `configs/imagebuilder/categories/`。
 These category files live under `configs/imagebuilder/categories/`.
 
 默认 nftables 友好合集请参考 `categories/all.txt`；Docker 保留在 `storage-docker.txt` 中显式选择。
@@ -63,6 +61,7 @@ You can reference them through `PRESET_FILE` in a profile env file.
 - `COMPONENT_PROXY=none|dae|homeproxy|openclash|passwall2`
 - `COMPONENT_STORAGE=common|docker`
 - `COMPONENT_NETWORK=enhanced`
+- `COMPONENT_BYPASS=off|on`
 - `COMPONENT_DNS=none|adguard|mosdns`
 - `COMPONENT_EXTRAS=none|extras`
 - `PRESET_FILE=configs/imagebuilder/presets/*.env`
@@ -83,10 +82,10 @@ Each toggle value determines which `categories/<name>.txt` is loaded:
 | | `dae` | `proxy-dae.txt` |
 | | `homeproxy` | `proxy-homeproxy.txt` |
 | | `openclash` | `proxy-openclash.txt` |
-|| `passwall2` | `proxy-passwall2.txt` |
-|| `COMPONENT_DNS` | `none` | 跳过 / skipped |
-|| | `adguard` | `dns-adguard.txt` |
-|| | `mosdns` | `dns-mosdns.txt` |
+| | `passwall2` | `proxy-passwall2.txt` |
+| `COMPONENT_DNS` | `none` | 跳过 / skipped |
+| | `adguard` | `dns-adguard.txt` |
+| | `mosdns` | `dns-mosdns.txt` |
 | `COMPONENT_STORAGE` | `common` | `storage-common.txt` |
 | | `docker` | `storage-docker.txt` |
 | `COMPONENT_NETWORK` | `enhanced` | `network-enhanced.txt` |
@@ -104,12 +103,13 @@ Assembly order (`generate-imagebuilder-manifest.sh`):
 4. 网络 category（如 `network-enhanced.txt`）
 5. 存储 category（如 `storage-common.txt`）
 6. DNS category（如 `dns-adguard.txt`），仅在值非 `none` 时
-7. 工具 extras category（如 `tools-extras.txt`），仅在值非 `none` 时
+7. 工具 extras category（`tools-extras.txt`），仅在 `COMPONENT_EXTRAS=extras` 时
 8. 代理 category（如 `proxy-dae.txt`），仅在值非 `none` 时
 9. 旁路由 category（`network-bypass.txt`），仅在值 = `on` 时
 
 最终合并后的包单去重排序，写入 `generated-packages.txt`。
 The merged package list is deduplicated, sorted, and written to `generated-packages.txt`.
+
 ## 添加默认软件包 / Add Default Packages
 
 如果你只想补一个简单包，可以继续直接改 `configs/imagebuilder/packages-base.txt`；但更推荐把它归类到 `categories/` 里。  
