@@ -12,18 +12,16 @@ The current 80/20 categories include:
 - 代理套件 / Proxy suites
 - DNS 套件 / DNS suites
 - 系统工具扩展 / System tools extras（extras：frpc、frps、ttyd 等 / includes frpc, frps, ttyd, etc.）
-- Docker / 存储 / Docker and storage
+- 存储 / Storage（Docker 显式 opt-in / Docker is explicit opt-in）
 - 常用系统工具 / Common system tools
 - 网络增强 / Network enhancements
 - 旁路由预设 / Bypass-router preset
 
 这些分类文件位于 `configs/imagebuilder/categories/`。  
 These category files live under `configs/imagebuilder/categories/`.
-这些分类文件位于 `configs/imagebuilder/categories/`。
-These category files live under `configs/imagebuilder/categories/`.
 
-所有包的去重合集请参考 `categories/all.txt`。
-The deduplicated union of all packages is in `categories/all.txt`.
+默认 nftables 友好合集请参考 `categories/all.txt`；Docker 保留在 `storage-docker.txt` 中显式选择。
+The default nftables-friendly bundle is in `categories/all.txt`; Docker remains available as an explicit `storage-docker.txt` selection.
 
 ## 分类包清单 / Category Package Manifests
 
@@ -36,7 +34,7 @@ For example:
 - `base.txt`：基础 LuCI 与系统工具 / Base LuCI and system utilities
 - `theme-stock.txt`、`theme-argon.txt`：主题选择 / Theme selection
 - `network-enhanced.txt`：常用网络增强 / Common network enhancements
-- `storage-docker.txt`：Docker 与磁盘相关组件 / Docker and storage components
+- `storage-docker.txt`：Docker 与磁盘相关组件；会拉入 iptables/xtables 兼容栈，应显式选择 / Docker and storage components; pulls the iptables/xtables compatibility stack and should be selected explicitly
 - `dns-adguard.txt`、`dns-mosdns.txt`：DNS 套件 / DNS suites
 - `proxy-homeproxy.txt`、`proxy-openclash.txt`、`proxy-passwall2.txt`：代理套件 / Proxy suites
 
@@ -63,6 +61,7 @@ You can reference them through `PRESET_FILE` in a profile env file.
 - `COMPONENT_PROXY=none|dae|homeproxy|openclash|passwall2`
 - `COMPONENT_STORAGE=common|docker`
 - `COMPONENT_NETWORK=enhanced`
+- `COMPONENT_BYPASS=off|on`
 - `COMPONENT_DNS=none|adguard|mosdns`
 - `COMPONENT_EXTRAS=none|extras`
 - `PRESET_FILE=configs/imagebuilder/presets/*.env`
@@ -83,10 +82,10 @@ Each toggle value determines which `categories/<name>.txt` is loaded:
 | | `dae` | `proxy-dae.txt` |
 | | `homeproxy` | `proxy-homeproxy.txt` |
 | | `openclash` | `proxy-openclash.txt` |
-|| `passwall2` | `proxy-passwall2.txt` |
-|| `COMPONENT_DNS` | `none` | 跳过 / skipped |
-|| | `adguard` | `dns-adguard.txt` |
-|| | `mosdns` | `dns-mosdns.txt` |
+| | `passwall2` | `proxy-passwall2.txt` |
+| `COMPONENT_DNS` | `none` | 跳过 / skipped |
+| | `adguard` | `dns-adguard.txt` |
+| | `mosdns` | `dns-mosdns.txt` |
 | `COMPONENT_STORAGE` | `common` | `storage-common.txt` |
 | | `docker` | `storage-docker.txt` |
 | `COMPONENT_NETWORK` | `enhanced` | `network-enhanced.txt` |
@@ -104,12 +103,13 @@ Assembly order (`generate-imagebuilder-manifest.sh`):
 4. 网络 category（如 `network-enhanced.txt`）
 5. 存储 category（如 `storage-common.txt`）
 6. DNS category（如 `dns-adguard.txt`），仅在值非 `none` 时
-7. 工具 extras category（如 `tools-extras.txt`），仅在值非 `none` 时
+7. 工具 extras category（`tools-extras.txt`），仅在 `COMPONENT_EXTRAS=extras` 时
 8. 代理 category（如 `proxy-dae.txt`），仅在值非 `none` 时
 9. 旁路由 category（`network-bypass.txt`），仅在值 = `on` 时
 
 最终合并后的包单去重排序，写入 `generated-packages.txt`。
 The merged package list is deduplicated, sorted, and written to `generated-packages.txt`.
+
 ## 添加默认软件包 / Add Default Packages
 
 如果你只想补一个简单包，可以继续直接改 `configs/imagebuilder/packages-base.txt`；但更推荐把它归类到 `categories/` 里。  
@@ -135,6 +135,9 @@ Place files under `files/`, and keep the path structure consistent with the Open
 
 旁路由预设还会使用 `files/presets/bypass-router/` 中的覆盖文件。  
 The bypass-router preset also uses overlay files under `files/presets/bypass-router/`.
+
+当前旁路由默认值参考 Kwrt 的 `10.0.0.0/24` 网段思路，但保持 OpenWrt 24.10 的 fw4/nftables 栈：LAN 地址为 `10.0.0.2/24`，上游网关和 DNS 为 `10.0.0.1`，DHCP、RA、DHCPv6 和 NDP 默认关闭，LAN 防火墙转发设为 `ACCEPT`。如需接入已有主路由网段，编辑 `files/presets/bypass-router/etc/uci-defaults/30-bypass-router` 顶部变量即可。
+The current bypass-router defaults follow Kwrt's `10.0.0.0/24` network convention while keeping OpenWrt 24.10 on fw4/nftables: LAN address `10.0.0.2/24`, upstream gateway and DNS `10.0.0.1`, DHCP, RA, DHCPv6, and NDP disabled by default, and LAN firewall forwarding set to `ACCEPT`. To join an existing upstream subnet, edit the variables at the top of `files/presets/bypass-router/etc/uci-defaults/30-bypass-router`.
 
 ## 新增设备配置 / Add a New Device Profile
 

@@ -11,8 +11,8 @@ ENV_FILE="${1:-configs/imagebuilder/example-x86_64.env}"
 require_linux_host
 require_file "$ENV_FILE"
 
-for command_name in bash curl tar make; do
-  command -v "$command_name" >/dev/null 2>&1 || die "Required command not found: $command_name"
+for command_name in bash curl file gawk make rsync tar zstd; do
+  require_command "$command_name"
 done
 
 log "Running repository validation"

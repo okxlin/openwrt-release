@@ -58,6 +58,9 @@ It uses two build paths by default:
 本地构建仅支持 Linux 主机；Windows 或 MSYS 环境只适合编辑和静态校验，不适合执行 OpenWrt 的 ImageBuilder 或完整源码构建。  
 Local builds are supported only on Linux hosts. Windows or MSYS environments are suitable for editing and static validation, but not for running OpenWrt ImageBuilder or full source builds.
 
+本地 ImageBuilder 需要 `bash`, `curl`, `file`, `gawk`, `git`, `make`, `python3`/`PyYAML`, `rsync`, `xz` 和 `zstd`。
+Local ImageBuilder builds require `bash`, `curl`, `file`, `gawk`, `git`, `make`, `python3`/`PyYAML`, `rsync`, `xz`, and `zstd`.
+
 如果你希望在 Linux 主机上一键完成“校验 + ImageBuilder 构建”，可以直接运行下面的配套脚本：  
 If you want a single Linux entrypoint that runs validation and then performs the ImageBuilder build, use the helper script below:
 
@@ -131,7 +134,7 @@ The template now includes an 80/20 capability matrix covering the following area
 - 代理套件 / Proxy suites（daed、homeproxy、openclash、passwall2）
 - DNS 服务 / DNS services（adguard、mosdns）
 - 系统工具扩展 / System tools extras（frpc、frps、ttyd 等）
-- Docker / 存储 / Docker and storage（common、docker）
+- 存储 / Storage（common；Docker 作为显式 opt-in 组件保留）
 - 常用系统工具 / Common system tools
 - 网络增强 / Network enhancements（基础包 + ddns、wireguard、upnp 等）
 - 旁路由预设 / Bypass-router preset

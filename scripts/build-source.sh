@@ -17,6 +17,41 @@ OUTPUT_DIR="$ROOT_DIR/dist/source"
 ensure_dir "$OUTPUT_DIR"
 require_dir "$SOURCE_DIR"
 
+detect_openwrt_version() {
+  local targets_dir="$1"
+  local profiles_file version version_file
+
+  profiles_file="$(find "$targets_dir" -type f -name profiles.json | sort | head -1 || true)"
+  if [[ -n "$profiles_file" ]] && command -v python3 >/dev/null 2>&1; then
+    version="$(
+      python3 - "$profiles_file" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as handle:
+    data = json.load(handle)
+
+print(data.get("version_number") or "")
+PY
+    )"
+    if [[ -n "$version" ]]; then
+      printf '%s\n' "$version"
+      return
+    fi
+  fi
+
+  version_file="$(find "$targets_dir" -type f -name version.buildinfo | sort | head -1 || true)"
+  if [[ -n "$version_file" ]]; then
+    version="$(head -1 "$version_file")"
+    if [[ -n "$version" ]]; then
+      printf '%s\n' "$version"
+      return
+    fi
+  fi
+
+  printf '%s\n' 'openwrt'
+}
+
 pushd "$SOURCE_DIR" >/dev/null
 ./scripts/feeds update -a
 ./scripts/feeds install -a
@@ -42,6 +77,12 @@ if grep -qE 'CONFIG_PACKAGE_daed=y|CONFIG_PACKAGE_mosdns=y' "$SOURCE_DIR/.config
   else
     warn "golang Makefile not found at $GOLANG_MAKEFILE; daed/mosdns build may fail"
   fi
+fi
+
+if grep -q 'CONFIG_PACKAGE_daed=y' "$SOURCE_DIR/.config" 2>/dev/null; then
+  for command_name in clang llvm-strip; do
+    require_command "$command_name"
+  done
 fi
 
 # If openclash is selected, pre-download Meta core (mihomo) for offline use
@@ -74,23 +115,25 @@ if [[ -f "$ROOT_DIR/$CONFIG_FILE" ]]; then
       echo "CONFIG_PACKAGE_$symbol=y" >> .config
     fi
   done
-  make olddefconfig || true  # resolve recursive deps (e.g. sing-box←homeproxy)
 
   # LuCI i18n packages use auto-generated config symbols not present
-  # in .config-package.in; force-add them directly from original config
+  # in .config-package.in; force-add them before the final config sync.
   for symbol in $(grep '^CONFIG_PACKAGE_luci-i18n.*=y$' "$ROOT_DIR/$CONFIG_FILE" | sed 's/=y$//'); do
     if ! grep -q "${symbol}=y" .config 2>/dev/null; then
       log "Force-adding i18n package: ${symbol#CONFIG_PACKAGE_}"
       echo "${symbol}=y" >> .config
     fi
   done
+
+  make defconfig
 fi
 
 make -j"$(nproc)"
 popd >/dev/null
 
 # Export OpenWrt version for package-artifacts.sh BUILD_TAG renaming
-export OPENWRT_VERSION=$(sed -n 's/.*VERSION_NUMBER.*,\([^)]*\).*/\1/p' "$SOURCE_DIR/include/version.mk" | head -1)
+OPENWRT_VERSION="$(detect_openwrt_version "$SOURCE_DIR/bin/targets")"
+export OPENWRT_VERSION
 bash "$SCRIPT_DIR/package-artifacts.sh" "$SOURCE_DIR/bin/targets" "$OUTPUT_DIR"
 
 log "Full source build completed."

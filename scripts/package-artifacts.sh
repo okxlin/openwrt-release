@@ -24,8 +24,21 @@ if [[ -n "${BUILD_TAG:-}" ]]; then
   while IFS= read -r -d '' img; do
     dir="$(dirname "$img")"
     base="$(basename "$img")"
-    # Strip 'openwrt-VERSION-' prefix, replace with version-tag-
-    new_base="${base#openwrt-${ver}-}"
+    if [[ "$base" == openwrt-"${ver}"-"${BUILD_TAG}"-* ]]; then
+      continue
+    fi
+    # Normalize both release ImageBuilder and source-build names.
+    if [[ "$base" == openwrt-"${ver}"-* ]]; then
+      suffix="${base#openwrt-${ver}-}"
+    elif [[ "$base" == openwrt-* ]]; then
+      suffix="${base#openwrt-}"
+    else
+      suffix="$base"
+    fi
+    new_base="openwrt-${ver}-${BUILD_TAG}-${suffix}"
+    if [[ "$base" == "$new_base" ]]; then
+      continue
+    fi
     mv "$img" "${dir}/${new_base}"
     log "  $(basename "$img") -> ${new_base}"
   done < <(find "$DEST_DIR" -name '*.img.gz' -print0)

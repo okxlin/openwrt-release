@@ -19,6 +19,77 @@ load_config_file() {
   require_file "$config_file"
 }
 
+resolve_imagebuilder_components() {
+  if [[ -n "${OVERRIDE_PRESET_FILE:-}" ]]; then
+    PRESET_FILE="$OVERRIDE_PRESET_FILE"
+  fi
+
+  if [[ -n "${PRESET_FILE:-}" ]]; then
+    require_file "$PRESET_FILE"
+    # shellcheck disable=SC1090
+    source "$PRESET_FILE"
+  fi
+
+  if [[ -n "${OVERRIDE_COMPONENT_THEMES:-}" ]]; then
+    COMPONENT_THEMES="$OVERRIDE_COMPONENT_THEMES"
+  fi
+
+  if [[ -n "${OVERRIDE_COMPONENT_PROXY:-}" ]]; then
+    COMPONENT_PROXY="$OVERRIDE_COMPONENT_PROXY"
+  fi
+
+  if [[ -n "${OVERRIDE_COMPONENT_STORAGE:-}" ]]; then
+    COMPONENT_STORAGE="$OVERRIDE_COMPONENT_STORAGE"
+  fi
+
+  if [[ -n "${OVERRIDE_COMPONENT_NETWORK:-}" ]]; then
+    COMPONENT_NETWORK="$OVERRIDE_COMPONENT_NETWORK"
+  fi
+
+  if [[ -n "${OVERRIDE_COMPONENT_BYPASS:-}" ]]; then
+    COMPONENT_BYPASS="$OVERRIDE_COMPONENT_BYPASS"
+  fi
+
+  if [[ -n "${OVERRIDE_COMPONENT_DNS:-}" ]]; then
+    COMPONENT_DNS="$OVERRIDE_COMPONENT_DNS"
+  fi
+
+  if [[ -n "${OVERRIDE_COMPONENT_IMAGE:-}" ]]; then
+    COMPONENT_IMAGE="$OVERRIDE_COMPONENT_IMAGE"
+  fi
+
+  if [[ -n "${OVERRIDE_COMPONENT_EXTRAS:-}" ]]; then
+    COMPONENT_EXTRAS="$OVERRIDE_COMPONENT_EXTRAS"
+  fi
+
+  : "${COMPONENT_THEMES:=stock}"
+  : "${COMPONENT_PROXY:=none}"
+  : "${COMPONENT_STORAGE:=common}"
+  : "${COMPONENT_NETWORK:=enhanced}"
+  : "${COMPONENT_BYPASS:=off}"
+  : "${COMPONENT_DNS:=none}"
+  : "${COMPONENT_IMAGE:=default}"
+  : "${COMPONENT_EXTRAS:=none}"
+}
+
+copy_imagebuilder_base_files() {
+  local source_dir="$1"
+  local destination_dir="$2"
+
+  require_dir "$source_dir"
+  ensure_dir "$destination_dir"
+  rsync -a --exclude '/presets/' "$source_dir"/ "$destination_dir"/
+}
+
+copy_imagebuilder_preset_files() {
+  local source_dir="$1"
+  local destination_dir="$2"
+
+  require_dir "$source_dir"
+  ensure_dir "$destination_dir"
+  rsync -a "$source_dir"/ "$destination_dir"/
+}
+
 join_packages() {
   local packages_file="$1"
   require_file "$packages_file"

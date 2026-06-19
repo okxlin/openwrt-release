@@ -12,63 +12,13 @@ ENV_FILE="${1:-}"
 load_env_file "$ENV_FILE"
 
 CATEGORY_DIR="$ROOT_DIR/configs/imagebuilder/categories"
-PRESET_FILE="${PRESET_FILE:-}"
 OUTPUT_MANIFEST="${GENERATED_PACKAGES_FILE:-$ROOT_DIR/dist/imagebuilder/generated-packages.txt}"
 OUTPUT_COMPONENTS="${GENERATED_COMPONENTS_FILE:-$ROOT_DIR/dist/imagebuilder/generated-components.txt}"
 
 ensure_dir "$(dirname "$OUTPUT_MANIFEST")"
 ensure_dir "$(dirname "$OUTPUT_COMPONENTS")"
 
-if [[ -n "${OVERRIDE_PRESET_FILE:-}" ]]; then
-  PRESET_FILE="$OVERRIDE_PRESET_FILE"
-fi
-
-if [[ -n "$PRESET_FILE" ]]; then
-  require_file "$PRESET_FILE"
-  # shellcheck disable=SC1090
-  source "$PRESET_FILE"
-fi
-
-if [[ -n "${OVERRIDE_COMPONENT_THEMES:-}" ]]; then
-  COMPONENT_THEMES="$OVERRIDE_COMPONENT_THEMES"
-fi
-
-if [[ -n "${OVERRIDE_COMPONENT_PROXY:-}" ]]; then
-  COMPONENT_PROXY="$OVERRIDE_COMPONENT_PROXY"
-fi
-
-if [[ -n "${OVERRIDE_COMPONENT_STORAGE:-}" ]]; then
-  COMPONENT_STORAGE="$OVERRIDE_COMPONENT_STORAGE"
-fi
-
-if [[ -n "${OVERRIDE_COMPONENT_NETWORK:-}" ]]; then
-  COMPONENT_NETWORK="$OVERRIDE_COMPONENT_NETWORK"
-fi
-
-if [[ -n "${OVERRIDE_COMPONENT_BYPASS:-}" ]]; then
-  COMPONENT_BYPASS="$OVERRIDE_COMPONENT_BYPASS"
-fi
-
-if [[ -n "${OVERRIDE_COMPONENT_DNS:-}" ]]; then
-  COMPONENT_DNS="$OVERRIDE_COMPONENT_DNS"
-fi
-
-if [[ -n "${OVERRIDE_COMPONENT_IMAGE:-}" ]]; then
-  COMPONENT_IMAGE="$OVERRIDE_COMPONENT_IMAGE"
-fi
-if [[ -n "${OVERRIDE_COMPONENT_EXTRAS:-}" ]]; then
-  COMPONENT_EXTRAS="$OVERRIDE_COMPONENT_EXTRAS"
-fi
-
-
-: "${COMPONENT_THEMES:=stock}"
-: "${COMPONENT_PROXY:=none}"
-: "${COMPONENT_STORAGE:=common}"
-: "${COMPONENT_NETWORK:=enhanced}"
-: "${COMPONENT_BYPASS:=off}"
-: "${COMPONENT_DNS:=none}"
-: "${COMPONENT_IMAGE:=default}"
-: "${COMPONENT_EXTRAS:=none}"
+resolve_imagebuilder_components
 
 temp_manifest="$(mktemp)"
 trap 'rm -f "$temp_manifest"' EXIT
@@ -89,7 +39,7 @@ append_category "theme-$COMPONENT_THEMES"
 append_category "network-$COMPONENT_NETWORK"
 append_category "storage-$COMPONENT_STORAGE"
 append_category "dns-$COMPONENT_DNS"
-append_category "tools-extras"
+append_category "tools-$COMPONENT_EXTRAS"
 
 
 if [[ "$COMPONENT_PROXY" != "none" ]]; then

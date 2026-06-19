@@ -3,13 +3,13 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=scripts/lib.sh
-source "$SCRIPT_DIR/lib.sh"
+# shellcheck source=scripts/common.sh
+source "$SCRIPT_DIR/common.sh"
 
 MODE="${2:-}"
 
 if [[ "${1:-}" != "--mode" ]] || [[ -z "$MODE" ]]; then
-  die "Usage: bash scripts/check-env.sh --mode <shell|yaml|structure|all>"
+  die "Usage: bash scripts/check-env.sh --mode <shell|yaml|structure|firewall|bypass|imagebuilder|all>"
 fi
 
 check_shell() {
@@ -68,6 +68,166 @@ check_structure() {
   log "Repository structure validation passed."
 }
 
+check_firewall_stack() {
+  local failed=0
+  local package_pattern='^(iptables|ip6tables|iptables-nft|iptables-legacy|ip6tables-legacy|iptables-zz-legacy|iptables-mod-.*|ip6tables-mod-.*|xtables.*|libxtables.*|libiptext.*|kmod-ipt-.*|kmod-ip6tables|kmod-nf-ipt.*|luci-app-sqm|sqm-scripts)$'
+  local config_pattern='^CONFIG_PACKAGE_(iptables|ip6tables|iptables-nft|iptables-legacy|ip6tables-legacy|iptables-zz-legacy|iptables-mod-.*|ip6tables-mod-.*|xtables.*|libxtables.*|libiptext.*|kmod-ipt-.*|kmod-ip6tables|kmod-nf-ipt.*|luci-app-sqm|sqm-scripts)=(y|m)$'
+  local docker_package_pattern='^(docker|dockerd|luci-app-dockerman)$'
+  local docker_config_pattern='^CONFIG_PACKAGE_(docker|dockerd|luci-app-dockerman|luci-i18n-dockerman-zh-cn)=(y|m)$'
+
+  while IFS= read -r file; do
+    while IFS= read -r line; do
+      printf 'Forbidden explicit legacy firewall package in %s: %s\n' "$file" "$line" >&2
+      failed=1
+    done < <(awk -v pattern="$package_pattern" 'NF && $1 !~ /^#/ && $1 ~ pattern { print NR ":" $1 }' "$file")
+  done < <(find "$ROOT_DIR/configs/imagebuilder" -type f -name '*.txt' | sort)
+
+  while IFS= read -r file; do
+    while IFS= read -r line; do
+      printf 'Forbidden explicit legacy firewall config in %s: %s\n' "$file" "$line" >&2
+      failed=1
+    done < <(awk -v pattern="$config_pattern" '$0 ~ pattern { print NR ":" $0 }' "$file")
+  done < <(find "$ROOT_DIR/configs/source" -type f -name '*.config' | sort)
+
+  while IFS= read -r line; do
+    printf 'Forbidden default Docker package in configs/imagebuilder/categories/all.txt: %s\n' "$line" >&2
+    failed=1
+  done < <(awk -v pattern="$docker_package_pattern" 'NF && $1 !~ /^#/ && $1 ~ pattern { print NR ":" $1 }' "$ROOT_DIR/configs/imagebuilder/categories/all.txt")
+
+  while IFS= read -r line; do
+    printf 'Forbidden default Docker config in configs/source/all-x86_64.config: %s\n' "$line" >&2
+    failed=1
+  done < <(awk -v pattern="$docker_config_pattern" '$0 ~ pattern { print NR ":" $0 }' "$ROOT_DIR/configs/source/all-x86_64.config")
+
+  while IFS= read -r file; do
+    while IFS= read -r line; do
+      printf 'Forbidden direct xtables command in %s: %s\n' "$file" "$line" >&2
+      failed=1
+    done < <(awk '/(^|[^A-Za-z0-9_-])(iptables|ip6tables|iptables-save|ip6tables-save|iptables-legacy|ip6tables-legacy)([^A-Za-z0-9_-]|$)/ { print NR ":" $0 }' "$file")
+  done < <(find "$ROOT_DIR/files" "$ROOT_DIR/packages" "$ROOT_DIR/scripts" \
+    -type f \
+    ! -path "$ROOT_DIR/scripts/check-env.sh" \
+    ! -path '*/.github/*' \
+    ! -path '*/luci-theme-argon/*' \
+    ! -name '*.md' \
+    ! -name '*.yml' \
+    ! -name '*.yaml' \
+    ! -name '*.po' \
+    ! -name '*.pot' \
+    ! -name '*.css' \
+    ! -name '*.less' \
+    | sort)
+
+  [[ "$failed" -eq 0 ]] || die "Firewall stack validation failed."
+  log "Firewall stack validation passed."
+}
+
+check_bypass_preset() {
+  local preset_script="$ROOT_DIR/files/presets/bypass-router/etc/uci-defaults/30-bypass-router"
+  require_file "$preset_script"
+  bash -n "$preset_script"
+
+  local temp_dir uci_log fake_uci
+  temp_dir="$(mktemp -d)"
+  uci_log="$temp_dir/uci.log"
+  fake_uci="$temp_dir/uci"
+  trap 'rm -rf "$temp_dir"' RETURN
+
+  {
+    printf '%s\n' '#!/usr/bin/env sh'
+    printf '%s\n' 'if [ "$*" = "-q show firewall" ]; then'
+    printf '%s\n' "  printf '%s\n' \"firewall.@zone[0].name='lan'\""
+    printf '%s\n' 'fi'
+    printf '%s\n' 'printf "%s\n" "$*" >> "$UCI_LOG"'
+  } > "$fake_uci"
+  chmod +x "$fake_uci"
+
+  UCI_LOG="$uci_log" PATH="$temp_dir:$PATH" sh "$preset_script"
+
+  local required_commands=(
+    "-q set network.lan.proto=static"
+    "-q set network.lan.ipaddr=10.0.0.2"
+    "-q set network.lan.netmask=255.255.255.0"
+    "-q set network.lan.gateway=10.0.0.1"
+    "-q add_list network.lan.dns=10.0.0.1"
+    "-q set dhcp.lan.ignore=1"
+    "-q set dhcp.lan.ra=disabled"
+    "-q set dhcp.lan.dhcpv6=disabled"
+    "-q set dhcp.lan.ndp=disabled"
+    "-q set firewall.@zone[0].forward=ACCEPT"
+    "-q commit network"
+    "-q commit dhcp"
+    "-q commit firewall"
+  )
+
+  local command
+  for command in "${required_commands[@]}"; do
+    grep -Fx -- "$command" "$uci_log" >/dev/null || die "Bypass preset missing UCI command: $command"
+  done
+
+  log "Bypass router preset validation passed."
+}
+
+check_imagebuilder_overrides() {
+  load_env_file "$ROOT_DIR/configs/imagebuilder/example-x86_64.env"
+  OVERRIDE_PRESET_FILE="$ROOT_DIR/configs/imagebuilder/presets/bypass-router.env"
+  resolve_imagebuilder_components
+
+  [[ "$COMPONENT_BYPASS" == "on" ]] || die "ImageBuilder override preset did not enable COMPONENT_BYPASS."
+  [[ "$COMPONENT_PROXY" == "none" ]] || die "Bypass ImageBuilder preset should not require source-only proxy packages."
+
+  log "ImageBuilder override validation passed."
+}
+
+check_imagebuilder_overlay_copy() {
+  local temp_dir source_dir dest_dir
+  temp_dir="$(mktemp -d)"
+  source_dir="$temp_dir/source"
+  dest_dir="$temp_dir/dest"
+  trap 'rm -rf "$temp_dir"' RETURN
+
+  mkdir -p "$source_dir/etc" "$source_dir/presets/bypass-router/etc"
+  printf '%s\n' base > "$source_dir/etc/base"
+  printf '%s\n' preset > "$source_dir/presets/bypass-router/etc/preset"
+
+  copy_imagebuilder_base_files "$source_dir" "$dest_dir"
+
+  [[ -f "$dest_dir/etc/base" ]] || die "ImageBuilder base overlay copy missed files/etc content."
+  [[ ! -e "$dest_dir/presets" ]] || die "ImageBuilder base overlay copy leaked files/presets into rootfs."
+
+  log "ImageBuilder overlay copy validation passed."
+}
+
+check_imagebuilder_component_manifest() {
+  local temp_dir manifest components extra_package
+  temp_dir="$(mktemp -d)"
+  trap 'rm -rf "$temp_dir"' RETURN
+  manifest="$temp_dir/generated-packages.txt"
+  components="$temp_dir/generated-components.txt"
+
+  OVERRIDE_COMPONENT_EXTRAS=none \
+    GENERATED_PACKAGES_FILE="$manifest" \
+    GENERATED_COMPONENTS_FILE="$components" \
+    bash "$ROOT_DIR/scripts/generate-imagebuilder-manifest.sh" \
+      "$ROOT_DIR/configs/imagebuilder/example-x86_64.env" >/dev/null
+
+  for extra_package in luci-app-frpc luci-app-frps luci-app-ttyd; do
+    ! grep -Fx -- "$extra_package" "$manifest" >/dev/null || die "ImageBuilder tools extras package should be opt-in: $extra_package"
+  done
+
+  OVERRIDE_COMPONENT_EXTRAS=extras \
+    GENERATED_PACKAGES_FILE="$manifest" \
+    GENERATED_COMPONENTS_FILE="$components" \
+    bash "$ROOT_DIR/scripts/generate-imagebuilder-manifest.sh" \
+      "$ROOT_DIR/configs/imagebuilder/example-x86_64.env" >/dev/null
+
+  for extra_package in luci-app-frpc luci-app-frps luci-app-ttyd; do
+    grep -Fx -- "$extra_package" "$manifest" >/dev/null || die "ImageBuilder tools extras package missing when enabled: $extra_package"
+  done
+
+  log "ImageBuilder component manifest validation passed."
+}
+
 case "$MODE" in
   shell)
     check_shell
@@ -78,10 +238,26 @@ case "$MODE" in
   structure)
     check_structure
     ;;
+  firewall)
+    check_firewall_stack
+    ;;
+  bypass)
+    check_bypass_preset
+    ;;
+  imagebuilder)
+    check_imagebuilder_overrides
+    check_imagebuilder_overlay_copy
+    check_imagebuilder_component_manifest
+    ;;
   all)
     check_shell
     check_yaml
     check_structure
+    check_firewall_stack
+    check_bypass_preset
+    check_imagebuilder_overrides
+    check_imagebuilder_overlay_copy
+    check_imagebuilder_component_manifest
     ;;
   *)
     die "Unknown mode: $MODE"

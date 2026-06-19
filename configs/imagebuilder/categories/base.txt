@@ -5,7 +5,6 @@ curl
 wget-ssl
 htop
 ip-full
-iptables-nft
 jq
 nano
 tcpdump

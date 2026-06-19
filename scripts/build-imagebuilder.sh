@@ -10,6 +10,12 @@ ENV_FILE="${1:-}"
 [[ -n "$ENV_FILE" ]] || die "Usage: bash scripts/build-imagebuilder.sh <env-file>"
 
 load_env_file "$ENV_FILE"
+require_linux_host
+for command_name in bash curl file gawk make rsync tar zstd; do
+  require_command "$command_name"
+done
+
+resolve_imagebuilder_components
 bash "$SCRIPT_DIR/prepare-imagebuilder.sh" "$ENV_FILE"
 
 if [[ -n "${PRESET_FILE:-}" || -n "${COMPONENT_THEMES:-}" || -n "${COMPONENT_PROXY:-}" || -n "${COMPONENT_STORAGE:-}" || -n "${COMPONENT_NETWORK:-}" || -n "${COMPONENT_BYPASS:-}" || -n "${COMPONENT_IMAGE:-}" ]]; then
@@ -30,10 +36,10 @@ ensure_dir "$METADATA_DIR"
 
 rm -rf "$BUILD_FILES_DIR"
 ensure_dir "$BUILD_FILES_DIR"
-cp -R "$ROOT_DIR/$FILES_DIR"/. "$BUILD_FILES_DIR/"
+copy_imagebuilder_base_files "$ROOT_DIR/$FILES_DIR" "$BUILD_FILES_DIR"
 
 if [[ "${COMPONENT_BYPASS:-off}" == "on" ]]; then
-  cp -R "$ROOT_DIR/files/presets/bypass-router/". "$BUILD_FILES_DIR/"
+  copy_imagebuilder_preset_files "$ROOT_DIR/files/presets/bypass-router" "$BUILD_FILES_DIR"
 fi
 
 if [[ -n "${EXTRA_FEEDS_FILE:-}" && -f "$EXTRA_FEEDS_FILE" ]]; then
