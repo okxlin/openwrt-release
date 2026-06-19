@@ -6,7 +6,7 @@
 |---|---|
 | GitHub Actions | 零配置 — ubuntu-latest runner 自带所有依赖 |
 | 本地 Linux | bash, curl, file, gawk, git, make, python3, PyYAML, rsync, xz, zstd |
-| 本地源码编译 | 额外需要 Go 1.26+ (`/usr/local/go`)、clang/llvm、30GB 磁盘 |
+| 本地源码编译 | 额外需要 Go 1.26+ (`/usr/local/go`)、clang、llvm/llvm-strip、30GB 磁盘 |
 
 Windows / macOS 不能用于构建，仅限于编辑仓库文件。
 
@@ -47,7 +47,7 @@ make source-build CONFIG_FILE=configs/source/dae-x86_64.config
 # DNS（AdGuard Home + MosDNS）
 make source-build CONFIG_FILE=configs/source/dns-x86_64.config
 
-# 全部（55+ 包，all-in-one）
+# 全部（nftables 友好 all-in-one，不含 Docker）
 BUILD_TAG=v1.0 make source-build CONFIG_FILE=configs/source/all-x86_64.config
 ```
 
@@ -61,7 +61,7 @@ BUILD_TAG=v1.0 make source-build CONFIG_FILE=configs/source/all-x86_64.config
 example-x86_64.env:
   COMPONENT_THEMES=argon      → 载入 theme-argon.txt
   COMPONENT_PROXY=homeproxy   → 载入 proxy-homeproxy.txt
-  COMPONENT_STORAGE=docker    → 载入 storage-docker.txt
+  COMPONENT_STORAGE=docker    → 载入 storage-docker.txt（会拉入 iptables/xtables 兼容栈）
   COMPONENT_NETWORK=enhanced  → 载入 network-enhanced.txt
   COMPONENT_BYPASS=off        → 跳过 bypass 分类
 ```
@@ -80,7 +80,7 @@ luci-theme-argon
 
 编辑或新增分类文件后重新运行 `make imagebuilder` 即可生效。
 
-`all.txt` 是所有分类的去重合集，供参考查看完整包清单，不直接用于构建。
+`all.txt` 是默认 nftables 友好合集，供参考查看完整包清单，不直接用于构建。Docker 仍可通过 `COMPONENT_STORAGE=docker` 显式选择，但它会拉入 iptables/xtables 兼容栈，可能触发 fw4/LuCI 的旧规则提示。
 
 ## 自定义包 / Custom Packages
 
@@ -134,8 +134,8 @@ A: 复制 `configs/imagebuilder/example-x86_64.env` 或 `example-bcm2711.env`，
 
 A: ImageBuilder（10 分钟）覆盖大多数场景。仅在需要内核模块（daed）、社区 feeds（openclash、passwall2、mosdns、easytier 等）、或社区包（luci-app-adguardhome、luci-theme-argon）时用 source build（数小时）。
 
-A: daed 和 mosdns 的 v2dat 都依赖 Go >= 1.26，而 OpenWrt 24.10 默认 Go 1.23。`build-source.sh` 会自动检测 `CONFIG_PACKAGE_daed=y|CONFIG_PACKAGE_mosdns=y` 并 patch golang 到 1.26。确保系统已安装 Go 1.26.4 到 `/usr/local/go`。
+A: daed 和 mosdns 的 v2dat 都依赖 Go >= 1.26，而 OpenWrt 24.10 默认 Go 1.23。`build-source.sh` 会自动检测 `CONFIG_PACKAGE_daed=y|CONFIG_PACKAGE_mosdns=y` 并 patch golang 到 1.26。确保系统已安装 Go 1.26.4 到 `/usr/local/go`；构建 daed 还需要 `clang` 和 `llvm-strip`。
 **Q: 怎么给固件文件加 tag？**
 A: 设置 `BUILD_TAG` 环境变量，构建后固件名会自动包含版本号和 tag。
-例如 `BUILD_TAG=v1.0` 生成 `24.10.7-v1.0-x86-64-generic-squashfs-combined-efi.img.gz`。
+例如 `BUILD_TAG=v1.0` 生成 `openwrt-24.10.7-v1.0-x86-64-generic-squashfs-combined-efi.img.gz`。
 GitHub Actions 上通过 `build_tag` 输入参数控制。

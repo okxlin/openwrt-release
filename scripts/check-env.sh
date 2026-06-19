@@ -70,8 +70,10 @@ check_structure() {
 
 check_firewall_stack() {
   local failed=0
-  local package_pattern='^(iptables|ip6tables|iptables-nft|iptables-legacy|ip6tables-legacy|iptables-zz-legacy|iptables-mod-.*|ip6tables-mod-.*|xtables.*|kmod-ipt-.*|luci-app-sqm|sqm-scripts)$'
-  local config_pattern='^CONFIG_PACKAGE_(iptables|ip6tables|iptables-nft|iptables-legacy|ip6tables-legacy|iptables-zz-legacy|iptables-mod-.*|ip6tables-mod-.*|xtables.*|kmod-ipt-.*|luci-app-sqm|sqm-scripts)=y$'
+  local package_pattern='^(iptables|ip6tables|iptables-nft|iptables-legacy|ip6tables-legacy|iptables-zz-legacy|iptables-mod-.*|ip6tables-mod-.*|xtables.*|libxtables.*|libiptext.*|kmod-ipt-.*|kmod-ip6tables|kmod-nf-ipt.*|luci-app-sqm|sqm-scripts)$'
+  local config_pattern='^CONFIG_PACKAGE_(iptables|ip6tables|iptables-nft|iptables-legacy|ip6tables-legacy|iptables-zz-legacy|iptables-mod-.*|ip6tables-mod-.*|xtables.*|libxtables.*|libiptext.*|kmod-ipt-.*|kmod-ip6tables|kmod-nf-ipt.*|luci-app-sqm|sqm-scripts)=(y|m)$'
+  local docker_package_pattern='^(docker|dockerd|luci-app-dockerman)$'
+  local docker_config_pattern='^CONFIG_PACKAGE_(docker|dockerd|luci-app-dockerman|luci-i18n-dockerman-zh-cn)=(y|m)$'
 
   while IFS= read -r file; do
     while IFS= read -r line; do
@@ -86,6 +88,16 @@ check_firewall_stack() {
       failed=1
     done < <(awk -v pattern="$config_pattern" '$0 ~ pattern { print NR ":" $0 }' "$file")
   done < <(find "$ROOT_DIR/configs/source" -type f -name '*.config' | sort)
+
+  while IFS= read -r line; do
+    printf 'Forbidden default Docker package in configs/imagebuilder/categories/all.txt: %s\n' "$line" >&2
+    failed=1
+  done < <(awk -v pattern="$docker_package_pattern" 'NF && $1 !~ /^#/ && $1 ~ pattern { print NR ":" $1 }' "$ROOT_DIR/configs/imagebuilder/categories/all.txt")
+
+  while IFS= read -r line; do
+    printf 'Forbidden default Docker config in configs/source/all-x86_64.config: %s\n' "$line" >&2
+    failed=1
+  done < <(awk -v pattern="$docker_config_pattern" '$0 ~ pattern { print NR ":" $0 }' "$ROOT_DIR/configs/source/all-x86_64.config")
 
   while IFS= read -r file; do
     while IFS= read -r line; do

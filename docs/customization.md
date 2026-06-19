@@ -22,8 +22,8 @@ These category files live under `configs/imagebuilder/categories/`.
 这些分类文件位于 `configs/imagebuilder/categories/`。
 These category files live under `configs/imagebuilder/categories/`.
 
-所有包的去重合集请参考 `categories/all.txt`。
-The deduplicated union of all packages is in `categories/all.txt`.
+默认 nftables 友好合集请参考 `categories/all.txt`；Docker 保留在 `storage-docker.txt` 中显式选择。
+The default nftables-friendly bundle is in `categories/all.txt`; Docker remains available as an explicit `storage-docker.txt` selection.
 
 ## 分类包清单 / Category Package Manifests
 
@@ -36,7 +36,7 @@ For example:
 - `base.txt`：基础 LuCI 与系统工具 / Base LuCI and system utilities
 - `theme-stock.txt`、`theme-argon.txt`：主题选择 / Theme selection
 - `network-enhanced.txt`：常用网络增强 / Common network enhancements
-- `storage-docker.txt`：Docker 与磁盘相关组件 / Docker and storage components
+- `storage-docker.txt`：Docker 与磁盘相关组件；会拉入 iptables/xtables 兼容栈，应显式选择 / Docker and storage components; pulls the iptables/xtables compatibility stack and should be selected explicitly
 - `dns-adguard.txt`、`dns-mosdns.txt`：DNS 套件 / DNS suites
 - `proxy-homeproxy.txt`、`proxy-openclash.txt`、`proxy-passwall2.txt`：代理套件 / Proxy suites
 

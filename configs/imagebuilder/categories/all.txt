@@ -29,9 +29,6 @@ kmod-fs-ext4
 kmod-usb-storage
 kmod-usb-storage-uas
 parted
-docker
-dockerd
-luci-app-dockerman
 dnsmasq-full
 luci-theme-bootstrap
 luci-theme-argon

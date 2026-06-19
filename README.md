@@ -134,7 +134,7 @@ The template now includes an 80/20 capability matrix covering the following area
 - 代理套件 / Proxy suites（daed、homeproxy、openclash、passwall2）
 - DNS 服务 / DNS services（adguard、mosdns）
 - 系统工具扩展 / System tools extras（frpc、frps、ttyd 等）
-- Docker / 存储 / Docker and storage（common、docker）
+- 存储 / Storage（common；Docker 作为显式 opt-in 组件保留）
 - 常用系统工具 / Common system tools
 - 网络增强 / Network enhancements（基础包 + ddns、wireguard、upnp 等）
 - 旁路由预设 / Bypass-router preset
